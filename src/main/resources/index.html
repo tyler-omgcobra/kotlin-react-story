@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" data-init="loading">
+    <head>
+        <meta charset="UTF-8">
+        <title>Loading...</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style>body{margin:0}.loader{background-color:#111;position:absolute;height:100%;width:100%;display:flex;align-content:center;align-self:center;justify-content:center}.spinner{display:flex;align-content:center;align-self:center;justify-content:center;animation:r 2s linear infinite}.spinner circle{fill:none;stroke:#fff;animation:d 2s linear infinite}@keyframes d{0%{stroke-dasharray:2,155;stroke-dashoffset:0}50%{stroke-dasharray:128,24;stroke-dashoffset:-20}100%{stroke-dasharray:2,155;stroke-dashoffset:-155}}@keyframes r{100%{transform:rotate(360deg)}}</style>
+    </head>
+    <body>
+        <div id="init-screen">
+            <noscript id="init-no-js">Javascript is required</noscript>
+            <div class="loader">
+                <svg id="init-loading" class="spinner" width="66px" height="66px" stroke-width="5" viewBox="0 0 66 66">
+                    <circle r="25" cx="33" cy="33"></circle>
+                </svg>
+            </div>
+        </div>
+        <div id="root"></div>
+        <script src="kotlin-js.js"></script>
+    </body>
+</html>
