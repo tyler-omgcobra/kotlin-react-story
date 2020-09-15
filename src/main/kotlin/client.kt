@@ -1,25 +1,114 @@
-import kotlinext.js.getOwnPropertyNames
 import kotlinx.browser.document
-import kotlinx.css.RuleSet
-import react.child
+import kotlinx.html.js.onClickFunction
+import react.*
+import react.dom.button
+import react.dom.div
+import react.dom.p
 import react.dom.render
-import styled.injectGlobal
-import styles.GlobalStyles
+import kotlin.reflect.KClass
 
-fun main() {
-    render(document.head?.querySelector("title")) {
-        +"TF Card Battle"
+external interface TestState : RProps, RState {
+    var test: String
+    var passage: KClass<out Component<TestState, *>>
+    var setStoryState: (TestState.() -> Unit) -> Unit
+    var onTestChange: (String) -> Unit
+    var onPassageChange: (KClass<out Component<TestState, *>>) -> Unit
+}
+
+typealias Passage = RComponent<TestState, RState>
+typealias Story = RComponent<RProps, TestState>
+
+class SecondPage(props: TestState) : Passage(props) {
+    override fun RBuilder.render() {
+        p {
+            +"You got to the second page!"
+            +"Now let's see if you can get back"
+        }
+        button {
+            attrs {
+                onClickFunction = {
+                    props.setStoryState {
+                        passage = FirstPage::class
+                    }
+                }
+            }
+            +props.test
+        }
+        button {
+            attrs {
+                onClickFunction = {
+                    props.setStoryState {
+                        test = test.replace("a", "")
+                    }
+                }
+            }
+            +"Bye, As"
+        }
     }
-    injectGlobal {
-        with(GlobalStyles) {
-            getOwnPropertyNames().forEach {
-                +(asDynamic()[it] as RuleSet)
+}
+
+class FirstPage(props: TestState) : Passage(props) {
+    override fun RBuilder.render() {
+        p {
+            +props.test
+        }
+        div {
+            button {
+                attrs {
+                    onClickFunction = {
+                        props.setStoryState {
+                            test = props.test + "a"
+                        }
+                    }
+                }
+                +"button"
+            }
+        }
+        div {
+            button {
+                attrs {
+                    onClickFunction = {
+                        props.setStoryState {
+                            passage = SecondPage::class
+                        }
+                    }
+                }
+                +"Go to second"
             }
         }
     }
+}
 
-    render(document.getElementById("root")) {
-        child(Page)
+class TestStory : Story() {
+    init {
+        state.test = "Starting"
+        state.passage = FirstPage::class
     }
-    document.querySelector("html")?.attributes?.removeNamedItem("data-init")
+
+    override fun RBuilder.render() {
+        child(state.passage) {
+            attrs {
+                test = state.test
+                setStoryState = { setState(it) }
+            }
+        }
+    }
+}
+
+fun main() {
+    renderRoot()
+}
+
+fun renderRoot() {
+    render(document.getElementById("root")) {
+        child(Page) {
+            attrs {
+                title = "Test Story"
+                showFullscreen = true
+                showRightBar = false
+                onRestartClick = ::renderRoot
+            }
+            child(TestStory::class) {}
+        }
+    }
 }

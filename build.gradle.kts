@@ -2,11 +2,10 @@ plugins {
     kotlin("js") version "1.4.0"
     maven
 }
-group = "me.tyler"
+group = "org.omgcobra"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenLocal()
     mavenCentral()
     jcenter()
     maven {
