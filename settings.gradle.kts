@@ -1,3 +1,2 @@
-
-rootProject.name = "kotlin-js"
+rootProject.name = "kotlin-story"
 
