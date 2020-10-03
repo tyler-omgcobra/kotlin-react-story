@@ -30,15 +30,16 @@ interface StoryProps : RProps {
   var leftBarConfig: SideBarConfig?
   var rightBarConfig: SideBarConfig?
   var initialStoryState: StoryState
-  var excludeFromHistory: Set<RClass<*>>?
+  var excludeFromHistory: Collection<RClass<*>>?
   var title: String?
+  var onRestart: (StoryState.() -> Unit)?
 }
 
 val Story = rFunction<StoryProps>("Story") { props ->
   val initialState = props.initialStoryState.apply {
     last = null
   }
-  val (pair, setState) = initialState.prevReducer()
+  val (pair, setState) = initialState.usePrevReducer()
   val (state, prevState) = pair
   val wide = document.documentElement?.clientWidth?.let { it > 768 } ?: false
   val hasLeftBar = props.leftBarConfig != null
@@ -52,7 +53,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
     rightBarPinned = hasRightBar && wide
     theme = MaterialDark
   }
-  val (uiState, setUIState) = initialUIState.reducer()
+  val (uiState, setUIState) = initialUIState.useReducer()
 
   useEffect(listOf()) {
     document.title = props.title ?: "Story"
@@ -78,7 +79,10 @@ val Story = rFunction<StoryProps>("Story") { props ->
   val forward: () -> Unit = { TODO("Forward isn't working yet") }
   val restart = {
     setUIState { goingBack = true }
-    setState { Object.assign(this, initialState) }
+    setState {
+      Object.assign(this, initialState)
+      props.onRestart?.let { it() }
+    }
   }
 
   val uiHolder = UIHolder(
@@ -149,12 +153,12 @@ val Story = rFunction<StoryProps>("Story") { props ->
 
 private val StoryContext = createContext<Modifier<StoryState>>()
 
-fun <S : Any> S.reducer(): Pair<S, (S.() -> Unit) -> Unit> {
-  val reducerFn: (S, S.() -> Unit) -> S = { s, a -> Object.create(s).apply(a) }
+fun <S : Any> S.useReducer(): Pair<S, (S.() -> Unit) -> Unit> {
+  val reducerFn: (S, S.() -> Unit) -> S = { s, a -> clone(s).apply(a) }
   return useReducer(reducerFn, initState = this)
 }
 
-fun <S : Any> S.prevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
+fun <S : Any> S.usePrevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
   val reducerFn: (Pair<S, S?>, S.() -> Unit) -> Pair<S, S?> = { pair, a ->
     val first = pair.first
     clone(first).apply(a) to first
