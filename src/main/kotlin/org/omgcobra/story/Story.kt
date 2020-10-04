@@ -80,8 +80,12 @@ val Story = rFunction<StoryProps>("Story") { props ->
   val restart = {
     setUIState { goingBack = true }
     setState {
-      Object.assign(this, initialState)
-      props.onRestart?.let { it() }
+      val onRestart = props.onRestart
+      if (onRestart != null) {
+        onRestart()
+      } else {
+        Object.assign(this, initialState)
+      }
     }
   }
 
@@ -151,7 +155,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
   }
 }
 
-private val StoryContext = createContext<Modifier<StoryState>>()
+val StoryContext = createContext<Modifier<StoryState>>()
 
 fun <S : Any> S.useReducer(): Pair<S, (S.() -> Unit) -> Unit> {
   val reducerFn: (S, S.() -> Unit) -> S = { s, a -> clone(s).apply(a) }
@@ -197,7 +201,7 @@ val HorizontalLayout = rFunction<LayoutProps>("HorizontalLayout") { props ->
   }
 }
 
-private val UIContext: RContext<UIHolder> = createContext()
+val UIContext: RContext<UIHolder> = createContext()
 
 data class Modifier<T>(var current: T, var modifier: Dispatcher<T>)
 

@@ -29,35 +29,39 @@ inline fun RBuilder.themedA(
     href: String? = null,
     target: String? = null,
     classes: String? = null,
-    theme: Theme? = null,
-    block: RDOMBuilder<A>.() -> Unit
-): ReactElement = a(href, target, classes) {
-  block()
+    crossinline block: RDOMBuilder<A>.() -> Unit
+): ReactElement =
+  UIContext.Consumer { uiHolder ->
+    val theme = uiHolder.uiState.theme
+    a(href, target, classes) {
+      block()
 
-  val myTheme = theme ?: useTheme().theme
-  mergeStyle {
-    color = myTheme.link
+      mergeStyle {
+        color = theme.link
+      }
+      if (attrs.href.contains("://")) +" ${FontAwesome.shortcut}"
+    }
   }
-  if (attrs.href.contains("://")) +" ${FontAwesome.shortcut}"
-}
 
 inline fun RBuilder.themedButton(
     formEncType: ButtonFormEncType? = null,
     formMethod: ButtonFormMethod? = null,
     type: ButtonType? = null,
     classes: String? = null,
-    theme: Theme? = null,
-    variants: Iterable<ButtonVariant> = setOf(),
-    block: RDOMBuilder<BUTTON>.() -> Unit
-): ReactElement = button(formEncType, formMethod, type, classes) {
-  block()
+    variants: Iterable<ButtonVariant>? = null,
+    crossinline block: RDOMBuilder<BUTTON>.() -> Unit
+): ReactElement =
+  UIContext.Consumer { uiHolder ->
+    val theme = uiHolder.uiState.theme
+    button(formEncType, formMethod, type, classes) {
+      block()
 
-  val myTheme = theme ?: useTheme().theme
-  mergeStyle {
-    backgroundColor = myTheme.surface2dp
-    variants.forEach { (it.buildStyles)(myTheme) }
+      mergeStyle {
+        backgroundColor = theme.surface2dp
+        variants?.forEach { (it.buildStyles)(theme) }
+      }
+    }
   }
-}
 
 enum class ButtonVariant(val buildStyles: StyledElement.(Theme) -> Unit) {
   Primary({
@@ -80,12 +84,15 @@ enum class ButtonVariant(val buildStyles: StyledElement.(Theme) -> Unit) {
   })
 }
 
-inline fun RBuilder.themedSelect(classes: String? = null, theme: Theme? = null, block: RDOMBuilder<SELECT>.() -> Unit) = select(classes) {
-  block()
+inline fun RBuilder.themedSelect(classes: String? = null, crossinline block: RDOMBuilder<SELECT>.() -> Unit) =
+  UIContext.Consumer { uiHolder ->
+    val theme = uiHolder.uiState.theme
+    select(classes) {
+      block()
 
-  val myTheme = theme ?: useTheme().theme
-  mergeStyle {
-    backgroundColor = myTheme.background
-    color = myTheme.onBackground
+      mergeStyle {
+        backgroundColor = theme.background
+        color = theme.onBackground
+      }
+    }
   }
-}

@@ -120,19 +120,22 @@ fun useUpdate(dependencies: RDependenciesList? = null, effect: () -> Unit) {
   }
 }
 
-// fun <S : StoryState<S>, T : CommonAttributeGroupFacade> RDOMBuilder<T>.storyState(dispatch: Dispatcher<S>, block: S.() -> Unit) {
-//   attrs {
-//     onClickFunction = {
-//       dispatch {
-//         apply(block)
-//       }
-//     }
-//   }
-// }
-
 @Suppress("UnsafeCastFromDynamic")
 fun <T : Tag> RDOMBuilder<T>.mergeStyle(block: StyledElement.() -> Unit) {
   attrs {
     setProp("style", Object.assign(StyledElement().apply(block).toStyle(), get("style")))
+  }
+}
+
+fun <S : StoryState> RBuilder.withState(block: RBuilder.(S, Dispatcher<S>) -> Unit) = StoryContext.Consumer { storyModifier ->
+  val (state, updateState) = storyModifier.unsafeCast<Modifier<S>>()
+  block(state, updateState)
+}
+
+fun <T : CommonAttributeGroupFacade, S : StoryState> RDOMBuilder<T>.updateClick(updateState: Dispatcher<S>, block: S.() -> Unit) {
+  attrs {
+    onClickFunction = {
+      updateState(block)
+    }
   }
 }

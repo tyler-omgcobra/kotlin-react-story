@@ -1,3 +1,5 @@
+package org.omgcobra.story.example
+
 import kotlinext.js.jsObject
 import kotlinx.css.*
 import kotlinx.datetime.LocalDate
@@ -195,7 +197,7 @@ val initialState: ExampleState = jsObject {
   passage = Ex
 }
 
-fun main() {
+fun wouldBeMain() {
   renderToRoot {
     title = "Example Story"
     leftBarConfig = leftBar
