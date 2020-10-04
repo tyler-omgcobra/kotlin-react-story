@@ -17,13 +17,20 @@ interface ExampleState : StoryState {
 
 val leftBar = SideBarConfig(
     content = {
-      val (state) = useStoryState<ExampleState>()
-      p {
-        +state.test
+      StoryContext.Consumer { modifier ->
+        p {
+          +modifier.current.unsafeCast<ExampleState>().test
+        }
       }
+      // val (state) = useStoryState<ExampleState>()
+      // p {
+      //   +state.test
+      // }
     },
     buttons = {
-      val (theme, setTheme) = useTheme()
+      val uiHolder = useUI()
+      val theme = uiHolder.uiState.theme
+      val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { this.theme = it } }
       li {
         themedButton(variants = setOf(ButtonVariant.Tertiary)) {
           +"Toggle Theme"
@@ -36,7 +43,9 @@ val leftBar = SideBarConfig(
       }
     },
     showFullscreen = true,
-    showRestart = true
+    showRestart = true,
+    showSaves = true,
+    showHistory = true
 )
 
 val rightBar = SideBarConfig(right = true, content = {
@@ -51,7 +60,8 @@ val rightBar = SideBarConfig(right = true, content = {
 
 val Ex: RClass<RProps> = rFunction(::Ex.name) {
   val updateState = useStoryState<ExampleState>().modifier
-  val setTheme = useTheme().setTheme
+  val uiHolder = useUI()
+  val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { theme = it } }
 
   themedButton(variants = setOf(ButtonVariant.Primary)) {
     +"button"
@@ -203,5 +213,6 @@ fun wouldBeMain() {
     leftBarConfig = leftBar
     rightBarConfig = rightBar
     initialStoryState = initialState
+    components = setOf(Ex, ExTwo, ExCal)
   }
 }

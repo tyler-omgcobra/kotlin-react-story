@@ -10,6 +10,7 @@ import org.omgcobra.story.styles.*
 import org.omgcobra.story.styles.themes.*
 import react.*
 import react.dom.*
+import react.router.dom.*
 import styled.*
 
 interface UIState {
@@ -26,6 +27,19 @@ interface StoryState {
   var last: StoryState?
 }
 
+fun <S : StoryState> S.toJSON(): String {
+  val clone = clone(this).asDynamic()
+  clone.passage = passage.displayName
+  clone.last = last?.toJSON()
+  return JSON.stringify(clone)
+}
+fun String.hydrate(uiHolder: UIHolder): StoryState {
+  val obj = JSON.parse<dynamic>(this)
+  obj.passage = uiHolder.componentMap[obj.passage]
+  if (obj.last != null) obj.last = obj.last.unsafeCast<String>().hydrate(uiHolder)
+  return obj.unsafeCast<StoryState>()
+}
+
 interface StoryProps : RProps {
   var leftBarConfig: SideBarConfig?
   var rightBarConfig: SideBarConfig?
@@ -33,6 +47,7 @@ interface StoryProps : RProps {
   var excludeFromHistory: Collection<RClass<*>>?
   var title: String?
   var onRestart: (StoryState.() -> Unit)?
+  var components: Collection<RClass<*>>?
 }
 
 val Story = rFunction<StoryProps>("Story") { props ->
@@ -45,6 +60,8 @@ val Story = rFunction<StoryProps>("Story") { props ->
   val hasLeftBar = props.leftBarConfig != null
   val hasRightBar = props.rightBarConfig != null
   val excluded = props.excludeFromHistory ?: setOf()
+  val (components) = (props.components ?: setOf()).useReducer()
+  val componentMap = components.map { it.displayName to it }.toMap()
   val initialUIState: UIState = jsObject {
     goingBack = false
     leftBarOpen = hasLeftBar && wide
@@ -94,7 +111,8 @@ val Story = rFunction<StoryProps>("Story") { props ->
       updateUIState = setUIState,
       back = back,
       forward = forward,
-      restart = restart
+      restart = restart,
+      componentMap = componentMap
   )
 
   UIContext.Provider(uiHolder) {
@@ -146,7 +164,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
         child(ErrorBoundary::class) {
           SideBar {
             attrs {
-              config = it
+              config = it.copy(right = true)
             }
           }
         }
@@ -171,10 +189,6 @@ fun <S : Any> S.usePrevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
 }
 
 fun <S : StoryState> useStoryState(): Modifier<S> = useContext(StoryContext).unsafeCast<Modifier<S>>()
-fun useTheme(): ThemeHolder {
-  val (current, modifier) = useContext(UIContext)
-  return current.theme to { modifier { theme = it } }
-}
 fun useUI() = useContext(UIContext)
 
 interface LayoutProps : RProps {
@@ -210,13 +224,9 @@ data class UIHolder(
     var updateUIState: Dispatcher<UIState>,
     var back: () -> Unit,
     var forward: () -> Unit,
-    var restart: () -> Unit
+    var restart: () -> Unit,
+    var componentMap: Map<String?, RClass<*>>
 )
-typealias ThemeHolder = Pair<Theme, (Theme) -> Unit>
-val ThemeHolder.theme
-  get() = first
-val ThemeHolder.setTheme
-  get() = second
 
 inline fun renderToRoot(crossinline attrBuilder: StoryProps.() -> Unit) {
   injectGlobal(globalStyles)

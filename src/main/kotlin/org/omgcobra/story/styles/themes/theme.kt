@@ -39,7 +39,11 @@ inline fun RBuilder.themedA(
       mergeStyle {
         color = theme.link
       }
-      if (attrs.href.contains("://")) +" ${FontAwesome.shortcut}"
+      try {
+        if (attrs.href.contains("://")) +" ${FontAwesome.shortcut}"
+      } catch (e: Throwable) {
+
+      }
     }
   }
 

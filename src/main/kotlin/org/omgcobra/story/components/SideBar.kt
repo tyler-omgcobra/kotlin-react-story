@@ -1,6 +1,8 @@
 package org.omgcobra.story.components
 
+import kotlinext.js.*
 import kotlinx.browser.document
+import kotlinx.browser.localStorage
 import kotlinx.css.*
 import kotlinx.css.properties.*
 import kotlinx.html.*
@@ -8,7 +10,7 @@ import kotlinx.html.js.onClickFunction
 import org.omgcobra.story.*
 import org.omgcobra.story.styles.*
 import org.omgcobra.story.styles.themes.*
-import org.w3c.dom.HTMLButtonElement
+import org.w3c.dom.*
 import react.*
 import react.dom.*
 import styled.*
@@ -45,8 +47,8 @@ interface SideBarProps : RProps {
 }
 
 val SideBar: RClass<SideBarProps> = rFunction(displayName = ::SideBar.name) { props ->
-  val (theme) = useTheme()
   val (uiState, setUIState) = useUI()
+  val theme = uiState.theme
   val config = props.config
   val pinned = if (config.right) uiState.rightBarPinned else uiState.leftBarPinned
   val setPinned: (Boolean) -> Unit = { setUIState { if (config.right) rightBarPinned = it else leftBarPinned = it } }
@@ -160,9 +162,11 @@ private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
 }
 
 private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
+  val (state, updateState) = useContext(StoryContext)
   val (config, open) = useContext(SideBarContext)
-  val theme = useTheme().theme
-  val restart = useUI().restart
+  val uiHolder = useUI()
+  val theme = uiHolder.uiState.theme
+  val restart = uiHolder.restart
 
   styledDiv {
     css {
@@ -222,6 +226,29 @@ private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
           li {
             themedButton(variants = setOf(ButtonVariant.Tertiary)) {
               +"${config.saveIcon} Saves"
+              attrs {
+                onClickFunction = {
+                  localStorage["save"] = state.toJSON()
+                }
+              }
+            }
+          }
+          li {
+            button {
+              +"Load"
+              attrs {
+                onClickFunction = {
+                  localStorage["save"]?.let {
+                    val obj = it.hydrate(uiHolder)
+                    uiHolder.updateUIState {
+                      goingBack = true
+                    }
+                    updateState {
+                      Object.assign(this, obj)
+                    }
+                  }
+                }
+              }
             }
           }
         }
