@@ -2,27 +2,34 @@ package org.omgcobra.story.styles.themes
 
 import kotlinx.css.*
 import kotlinx.html.*
-import org.omgcobra.story.*
+import org.omgcobra.story.UIContext
+import org.omgcobra.story.mergeStyle
 import org.omgcobra.story.styles.FontAwesome
 import react.*
 import react.dom.*
+import kotlin.reflect.KProperty1
 
 interface Theme {
   val background: Color
   val onBackground: Color
+
   val surface: Color
   val onSurface: Color
-  val primary: Color
-  val secondary: Color
-  val tertiary: Color
-  val primaryContrast: Color
-  val secondaryContrast: Color
-  val tertiaryContrast: Color
+
+  val success: Color
+  val successContrast: Color
+
+  val error: Color
+  val errorContrast: Color
+
   val link: Color
   val border: Color
+
   val surface1dp: Color
   val surface2dp: Color
   val surface3dp: Color
+
+  val highlight: Color
 }
 
 inline fun RBuilder.themedA(
@@ -32,53 +39,67 @@ inline fun RBuilder.themedA(
     crossinline block: RDOMBuilder<A>.() -> Unit
 ): ReactElement =
   UIContext.Consumer { uiHolder ->
-    val theme = uiHolder.uiState.theme
     a(href, target, classes) {
       block()
 
-      mergeStyle {
-        color = theme.link
-      }
+      themed(theme = uiHolder.uiState.theme, colorProp = Theme::link)
       try {
         if (attrs.href.contains("://")) +" ${FontAwesome.shortcut}"
       } catch (e: Throwable) {
-
       }
     }
   }
+
+fun <T : Tag> RDOMBuilder<T>.themed(
+    vararg variants: Variant,
+    theme: Theme,
+    backgroundColorProp: KProperty1<Theme, Color> = Theme::background,
+    colorProp: KProperty1<Theme, Color> = Theme::onBackground
+) {
+  mergeStyle {
+    backgroundColor = backgroundColorProp.get(theme)
+    color = colorProp.get(theme)
+    variants.forEach { (it.buildStyles)(theme) }
+  }
+}
 
 inline fun RBuilder.themedButton(
     formEncType: ButtonFormEncType? = null,
     formMethod: ButtonFormMethod? = null,
     type: ButtonType? = null,
     classes: String? = null,
-    variants: Iterable<ButtonVariant>? = null,
+    variants: Collection<ButtonVariant>? = null,
     crossinline block: RDOMBuilder<BUTTON>.() -> Unit
 ): ReactElement =
   UIContext.Consumer { uiHolder ->
-    val theme = uiHolder.uiState.theme
     button(formEncType, formMethod, type, classes) {
       block()
 
-      mergeStyle {
-        backgroundColor = theme.surface2dp
-        variants?.forEach { (it.buildStyles)(theme) }
-      }
+      val variantList: Collection<ButtonVariant> = variants ?: listOf()
+      themed(
+          *variantList.sorted().toTypedArray(),
+          theme = uiHolder.uiState.theme,
+          backgroundColorProp = Theme::surface2dp
+      )
     }
   }
 
-enum class ButtonVariant(val buildStyles: StyledElement.(Theme) -> Unit) {
-  Primary({
-    backgroundColor = it.primary
-    color = it.primaryContrast
+interface Variant {
+  val buildStyles: StyledElement.(Theme) -> Unit
+}
+
+enum class ButtonVariant(override val buildStyles: StyledElement.(Theme) -> Unit) : Variant {
+  Success({
+    backgroundColor = it.success
+    color = it.successContrast
   }),
-  Secondary({
-    backgroundColor = it.secondary
-    color = it.secondaryContrast
+  Error({
+    backgroundColor = it.error
+    color = it.errorContrast
   }),
   Tertiary({
-    backgroundColor = it.tertiary
-    color = it.tertiaryContrast
+    backgroundColor = Color.transparent
+    color = Color.currentColor
   }),
   Box({
     borderWidth = 1.px
@@ -86,17 +107,5 @@ enum class ButtonVariant(val buildStyles: StyledElement.(Theme) -> Unit) {
     borderColor = it.border
     borderRadius = 0.em
   })
+  ;
 }
-
-inline fun RBuilder.themedSelect(classes: String? = null, crossinline block: RDOMBuilder<SELECT>.() -> Unit) =
-  UIContext.Consumer { uiHolder ->
-    val theme = uiHolder.uiState.theme
-    select(classes) {
-      block()
-
-      mergeStyle {
-        backgroundColor = theme.background
-        color = theme.onBackground
-      }
-    }
-  }

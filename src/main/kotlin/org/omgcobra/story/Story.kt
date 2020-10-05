@@ -2,25 +2,45 @@ package org.omgcobra.story
 
 import kotlinext.js.*
 import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlinx.css.*
 import kotlinx.css.properties.*
 import kotlinx.html.*
 import org.omgcobra.story.components.*
 import org.omgcobra.story.styles.*
 import org.omgcobra.story.styles.themes.*
+import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.events.Event
 import react.*
 import react.dom.*
-import react.router.dom.*
 import styled.*
 
 interface UIState {
   var goingBack: Boolean
+  var hasLeftBar: Boolean
   var leftBarOpen: Boolean
   var leftBarPinned: Boolean
+  var hasRightBar: Boolean
   var rightBarOpen: Boolean
   var rightBarPinned: Boolean
   var theme: Theme
+  var windowSize: WindowSize
 }
+
+val UIState.wide: Boolean
+  get() = window.innerWidth > 800
+val UIState.leftMargin: LinearDimension
+  get() = when {
+    !hasLeftBar         -> 0.em
+    wide && leftBarOpen -> barWidth
+    else                -> collapsedWidth
+  }
+val UIState.rightMargin: LinearDimension
+  get() = when {
+    !hasRightBar         -> 0.em
+    wide && rightBarOpen -> barWidth
+    else                 -> collapsedWidth
+  }
 
 interface StoryState {
   var passage: RClass<*>
@@ -50,34 +70,66 @@ interface StoryProps : RProps {
   var components: Collection<RClass<*>>?
 }
 
+data class WindowSize(
+    val width: Int,
+    val height: Int
+)
+
+fun debounce(ms: Int = 100, fn: (dynamic) -> Unit): (dynamic) -> Unit {
+  var timer: Int? = null
+  return { args ->
+    timer?.let { window.clearTimeout(it) }
+    timer = window.setTimeout(handler = {
+      timer = null
+      fn(args)
+    }, timeout = ms)
+  }
+}
+
 val Story = rFunction<StoryProps>("Story") { props ->
   val initialState = props.initialStoryState.apply {
     last = null
   }
   val (pair, setState) = initialState.usePrevReducer()
   val (state, prevState) = pair
-  val wide = document.documentElement?.clientWidth?.let { it > 768 } ?: false
-  val hasLeftBar = props.leftBarConfig != null
-  val hasRightBar = props.rightBarConfig != null
+  val hasLeft = props.leftBarConfig != null
+  val hasRight = props.rightBarConfig != null
   val excluded = props.excludeFromHistory ?: setOf()
   val (components) = (props.components ?: setOf()).useReducer()
   val componentMap = components.map { it.displayName to it }.toMap()
   val initialUIState: UIState = jsObject {
     goingBack = false
-    leftBarOpen = hasLeftBar && wide
-    leftBarPinned = hasLeftBar && wide
-    rightBarOpen = hasRightBar && wide
-    rightBarPinned = hasRightBar && wide
+    hasLeftBar = hasLeft
+    leftBarOpen = hasLeft
+    leftBarPinned = hasLeft
+    hasRightBar = hasRight
+    rightBarOpen = hasRight
+    rightBarPinned = hasRight
     theme = MaterialDark
+    windowSize = WindowSize(width = window.innerWidth, height = window.innerHeight)
   }
   val (uiState, setUIState) = initialUIState.useReducer()
+  val storyRef = useRef<HTMLDivElement?>(null)
 
   useEffect(listOf()) {
     document.title = props.title ?: "Story"
   }
 
+  useEffectWithCleanup(listOf()) {
+    val resize: (Event?) -> Unit = debounce { setUIState { windowSize = WindowSize(width = window.innerWidth, height = window.innerHeight) } }.unsafeCast<(Event?) -> Unit>()
+    window.addEventListener("resize", resize)
+    return@useEffectWithCleanup { window.removeEventListener("resize", resize) }
+  }
+
   useUpdate(listOf(state.passage)) {
-    document.scrollingElement?.scrollTo(0.0, 0.0)
+    storyRef.current?.scrollTo(0.0, 0.0)
+
+    if (!uiState.wide) {
+      setUIState {
+        leftBarOpen = leftBarPinned
+        rightBarOpen = rightBarPinned
+      }
+    }
 
     if (!uiState.goingBack && prevState?.passage !in excluded) {
       setState {
@@ -118,37 +170,29 @@ val Story = rFunction<StoryProps>("Story") { props ->
   UIContext.Provider(uiHolder) {
     StoryContext.Provider(Modifier(state, setState)) {
       val theme = uiState.theme
-      div {
-        attrs {
-          id = "story"
-          role = "main"
-        }
-        inlineStyles {
-          put("--scroll-bar-color", theme.surface3dp.toString())
-          backgroundColor = theme.background
-          color = theme.onBackground
-          borderColor = theme.border
-          transition(::marginLeft, .2.s, Timing.easeIn)
-          transition(::marginRight, .2.s, Timing.easeIn)
-          padding(all = 2.em)
-          zIndex = 10
-          marginLeft = if (!hasLeftBar) 0.em else if (wide && uiState.leftBarOpen) barWidth else collapsedWidth
-          marginRight = if (!hasRightBar) 0.em else if (wide && uiState.rightBarOpen) barWidth else collapsedWidth
-          minHeight = 100.vh
-          maxHeight = 100.vh
-          overflow = Overflow.auto
-        }
-        child(ErrorBoundary::class) {
-          VerticalLayout {
-            attrs {
-              spacing = 1.em
-              styles = {
-                textAlign = TextAlign.left
-                transition(::opacity, .4.s, Timing.easeIn)
-              }
+      child(ErrorBoundary::class) {
+        VerticalLayout {
+          attrs {
+            ref = storyRef
+            spacing = 1.em
+            styles = {
+              transition(::opacity, .4.s, Timing.easeIn)
+              put("--scroll-bar-color", theme.surface3dp.toString())
+              backgroundColor = theme.background
+              color = theme.onBackground
+              borderColor = theme.border
+              transition(::marginLeft, .2.s, Timing.easeIn)
+              transition(::marginRight, .2.s, Timing.easeIn)
+              padding(all = 2.em)
+              zIndex = 10
+              marginLeft = uiState.leftMargin
+              marginRight = uiState.rightMargin
+              minHeight = 100.vh
+              maxHeight = 100.vh
+              overflow = Overflow.auto
             }
-            state.passage {}
           }
+          state.passage {}
         }
       }
       props.leftBarConfig?.let {
@@ -175,9 +219,10 @@ val Story = rFunction<StoryProps>("Story") { props ->
 
 val StoryContext = createContext<Modifier<StoryState>>()
 
-fun <S : Any> S.useReducer(): Pair<S, (S.() -> Unit) -> Unit> {
+fun <S : Any> S.useReducer(): Modifier<S> {
   val reducerFn: (S, S.() -> Unit) -> S = { s, a -> clone(s).apply(a) }
-  return useReducer(reducerFn, initState = this)
+  val (current, modify) = useReducer(reducerFn, initState = this)
+  return Modifier(current, modify)
 }
 
 fun <S : Any> S.usePrevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
@@ -197,21 +242,38 @@ interface LayoutProps : RProps {
   var styles: (StyledElement.() -> Unit)?
 }
 
-val VerticalLayout = rFunction<LayoutProps>("VerticalLayout") { props ->
+private fun StyledDOMBuilder<DIV>.applyProps(props: LayoutProps) {
+  inlineStyles {
+    props.styles?.let { apply(it) }
+  }
+  props.children()
+}
+
+val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
   styledDiv {
-    css { +ComponentStyles.vertical(spacing = props.spacing ?: 0.em, align = props.align ?: Align.flexStart) }
-    inlineStyles { props.styles?.let { apply(it) } }
-    attrs { Object.assign(this, props) }
-    props.children()
+    css {
+      +ComponentStyles.flexLayout
+      setCustomProperty("top-spacing", props.spacing ?: 0.em)
+      setCustomProperty("left-spacing", 0.em)
+      flexDirection = FlexDirection.column
+      alignItems = props.align ?: Align.flexStart
+    }
+    attrs { ref = rRef }
+    applyProps(props)
   }
 }
 
-val HorizontalLayout = rFunction<LayoutProps>("HorizontalLayout") { props ->
+val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef ->
   styledDiv {
-    css { +ComponentStyles.horizontal(spacing = props.spacing ?: 0.em, align = props.align ?: Align.flexStart) }
-    inlineStyles { props.styles?.let { apply(it) } }
-    attrs { Object.assign(this, props) }
-    props.children()
+    css {
+      +ComponentStyles.flexLayout
+      setCustomProperty("top-spacing", 0.em)
+      setCustomProperty("left-spacing", props.spacing ?: 0.em)
+      flexDirection = FlexDirection.row
+      alignItems = props.align ?: Align.flexStart
+    }
+    attrs { ref = rRef }
+    applyProps(props)
   }
 }
 

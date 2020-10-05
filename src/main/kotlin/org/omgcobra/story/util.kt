@@ -5,6 +5,7 @@ import kotlinx.css.*
 import kotlinx.html.*
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onKeyDownFunction
+import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
@@ -138,4 +139,45 @@ fun <T : CommonAttributeGroupFacade, S : StoryState> RDOMBuilder<T>.updateClick(
       updateState(block)
     }
   }
+}
+
+data class Size (
+  val width: Int = 0,
+  val height: Int = 0
+)
+
+fun useSize(rRef: RMutableRef<Element?>): Size {
+  val (size, setSize) = useState(Size())
+  val debounced: (Size) -> Unit = debounce { setSize(it as Size) }
+  val observer = ResizeObserver {
+    it.forEach { box ->
+      val boxSize = box.contentBoxSize[0]
+      debounced(Size(width = boxSize.inlineSize, height = boxSize.blockSize))
+    }
+  }
+  useLayoutEffectWithCleanup(listOf(rRef.current)) {
+    rRef.current?.let { element ->
+      setSize(Size(width = element.clientWidth, height = element.clientHeight))
+      observer.observe(element)
+    }
+    return@useLayoutEffectWithCleanup { observer.disconnect() }
+  }
+  return size
+}
+
+fun useWidth(rRef: RMutableRef<Element?>) = useSize(rRef).width
+external interface BoxSize {
+  val blockSize: Int
+  val inlineSize: Int
+}
+
+external interface ResizeObserverEntry {
+  val target: Element?
+  val contentBoxSize: Array<BoxSize>
+}
+
+external class ResizeObserver(callback: (Array<ResizeObserverEntry>) -> Unit) {
+  fun observe(element: Element?)
+  fun unobserve(element: Element?)
+  fun disconnect()
 }

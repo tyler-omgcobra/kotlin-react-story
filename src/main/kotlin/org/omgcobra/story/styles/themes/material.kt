@@ -15,17 +15,16 @@ object Material : Theme {
   override val surface3dp = grey(4)
   override val onSurface = Color.black
 
-  override val primary = rgb(0x80, 0xc8, 0x96)
-  override val primaryContrast = Color.black
+  override val success = rgb(0x80, 0xc8, 0x96)
+  override val successContrast = Color.black
 
-  override val secondary = rgb(0xc8, 0x96, 0x80)
-  override val secondaryContrast = Color.black
-
-  override val tertiary = Color.transparent
-  override val tertiaryContrast = Color.black
+  override val error = rgb(0xc8, 0x96, 0x80)
+  override val errorContrast = Color.black
+  override val border = grey(6)
 
   override val link = Color.blue
-  override val border = grey(6)
+
+  override val highlight = Color.limeGreen.darken(50)
 }
 
 object MaterialDark : Theme {
@@ -40,14 +39,14 @@ object MaterialDark : Theme {
   override val surface3dp = grey(4)
   override val onSurface = Color.white
 
-  override val primary = rgb(0x0, 0x70, 0x20)
-  override val primaryContrast = Color.white
+  override val success = rgb(0x0, 0x70, 0x20)
+  override val successContrast = Color.white
 
-  override val secondary = rgb(0x70, 0x20, 0x0)
-  override val tertiary = Color.transparent
-  override val secondaryContrast = Color.white
-  override val tertiaryContrast = Color.white
+  override val error = rgb(0x70, 0x20, 0x0)
+  override val errorContrast = Color.white
   override val border: Color = grey(6)
 
   override val link = rgb(0x66, 0x88, 0xdd)
+
+  override val highlight = Color.limeGreen.lighten(50)
 }

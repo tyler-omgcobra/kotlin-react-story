@@ -63,7 +63,7 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
   val uiHolder = useUI()
   val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { theme = it } }
 
-  themedButton(variants = setOf(ButtonVariant.Primary)) {
+  themedButton {
     +"button"
     attrs {
       onClickFunction = {
@@ -73,7 +73,7 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
       }
     }
   }
-  themedButton(variants = setOf(ButtonVariant.Secondary)) {
+  themedButton(variants = setOf(ButtonVariant.Error)) {
     +"Go to second"
     attrs {
       onClickFunction = {
@@ -124,7 +124,7 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
     }
   }
   hr {}
-  themedSelect {
+  select {
     option { +"one" }
     option { +"two" }
     option { +"three" }
@@ -183,8 +183,7 @@ val ExCal: RClass<RProps> = rFunction(::ExCal.name) {
       start = LocalDate(2020, 10, 1),
       day = LocalDate(2020, 10, 2),
       chosen = chosen,
-      select = { setChosen(it) },
-      dayText = {}
+      select = { setChosen(it) }
   )
 
   Calendar {

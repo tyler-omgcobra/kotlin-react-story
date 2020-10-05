@@ -7,6 +7,7 @@ import kotlinx.css.*
 import kotlinx.css.properties.*
 import kotlinx.html.*
 import kotlinx.html.js.onClickFunction
+import kotlinx.html.js.onMouseOverFunction
 import org.omgcobra.story.*
 import org.omgcobra.story.styles.*
 import org.omgcobra.story.styles.themes.*
@@ -73,7 +74,7 @@ val SideBar: RClass<SideBarProps> = rFunction(displayName = ::SideBar.name) { pr
         width = barWidth
       }
       attrs {
-        onMouseEnterFunction = { if (it.target !is HTMLButtonElement) setOpen(true) }
+        onMouseOverFunction = { if (it.target !is HTMLButtonElement) setOpen(true) }
         onMouseLeaveFunction = { setOpen(pinned) }
       }
       SideBarTray {}
@@ -120,10 +121,8 @@ private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
         }
       }
     }
-    styledDiv {
-      css {
-        +ComponentStyles.horizontal(1.em)
-      }
+    HorizontalLayout {
+      attrs { spacing = 1.em }
       if (config.showHistory) {
         themedButton {
           +FontAwesome.arrow_left

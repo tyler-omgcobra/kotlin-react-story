@@ -10,6 +10,7 @@ val globalStyles: RuleSet = {
   fontFace(fontAwesome)
   html {
     fontFamily = "font-awesome, Verdana, Candara, Calibri, sans-serif"
+    fontSize = 14.px
   }
   universal {
     boxSizing = BoxSizing.borderBox
@@ -144,7 +145,9 @@ object ComponentStyles : StyleSheet("story") {
     minWidth = barWidth
     maxWidth = barWidth
     overflowWrap = OverflowWrap.breakWord
-    height = 100.pct
+    minHeight = 100.pct
+    maxHeight = 100.pct
+    overflow = Overflow.auto
     textAlign = TextAlign.center
     borderStyle = BorderStyle.solid
   }
@@ -202,27 +205,15 @@ object ComponentStyles : StyleSheet("story") {
     }
   }
 
-  private fun layout(direction: FlexDirection, spacing: LinearDimension, align: Align): RuleSet = {
+  val flexLayout by css {
     display = Display.flex
-    flexDirection = direction
-    alignItems = align
     children {
-      val marginProp = when (direction) {
-        FlexDirection.row, FlexDirection.rowReverse -> CSSBuilder::marginLeft
-        else                                        -> CSSBuilder::marginTop
-      }
-      marginProp.set(this, spacing)
-      firstChild {
-        marginProp.set(this, 0.em)
+      !firstChild {
+        marginTop = LinearDimension("var(--top-spacing, 0em)")
+        marginLeft = LinearDimension("var(--left-spacing, 0em)")
       }
     }
   }
-
-  fun vertical(spacing: LinearDimension = 0.5.em, align: Align = Align.flexStart): RuleSet =
-    layout(FlexDirection.column, spacing, align)
-
-  fun horizontal(spacing: LinearDimension = 0.5.em, align: Align = Align.flexStart): RuleSet =
-    layout(FlexDirection.row, spacing, align)
 }
 
 operator fun QuotedString.plus(other: QuotedString) = QuotedString(value = value + other.value)
