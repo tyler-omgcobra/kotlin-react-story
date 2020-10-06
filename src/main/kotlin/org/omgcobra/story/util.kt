@@ -2,11 +2,11 @@ package org.omgcobra.story
 
 import kotlinext.js.Object
 import kotlinx.css.*
+import kotlinx.datetime.*
 import kotlinx.html.*
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onKeyDownFunction
-import org.w3c.dom.Element
-import org.w3c.dom.HTMLElement
+import org.w3c.dom.*
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
 import react.*
@@ -39,6 +39,15 @@ fun Double.asMoney(
   str = "$intVal$str"
   return "$sign$currencySymbol$str"
 }
+
+operator fun LocalDate.minus(period: DatePeriod) = plus(DatePeriod(
+    years = -period.years,
+    months = -period.months,
+    days = -period.days
+))
+
+fun LocalDate.last(targetDayOfWeek: DayOfWeek) =
+  minus(DatePeriod(days = (dayOfWeek.ordinal - targetDayOfWeek.ordinal + 7) % 7))
 
 class IdGenerator(private var value: Int = 0) {
   val next: Int
@@ -141,23 +150,14 @@ fun <T : CommonAttributeGroupFacade, S> RDOMBuilder<T>.updateClick(updateState: 
   }
 }
 
-data class Size (
-  val width: Int = 0,
-  val height: Int = 0
-)
+fun useSize(rRef: RMutableRef<Element?>): DOMRectReadOnly {
+  val (size, setSize) = useState(DOMRectReadOnly(0.0, 0.0, 0.0, 0.0))
+  val debounced: (DOMRectReadOnly) -> Unit = debounce { setSize(it as DOMRectReadOnly) }
+  val observer = ResizeObserver { it.forEach { box -> debounced(box.contentRect) } }
 
-fun useSize(rRef: RMutableRef<Element?>): Size {
-  val (size, setSize) = useState(Size())
-  val debounced: (Size) -> Unit = debounce { setSize(it as Size) }
-  val observer = ResizeObserver {
-    it.forEach { box ->
-      val boxSize = box.contentBoxSize[0]
-      debounced(Size(width = boxSize.inlineSize, height = boxSize.blockSize))
-    }
-  }
   useLayoutEffectWithCleanup(listOf(rRef.current)) {
     rRef.current?.let { element ->
-      setSize(Size(width = element.clientWidth, height = element.clientHeight))
+      setSize(element.getBoundingClientRect())
       observer.observe(element)
     }
     return@useLayoutEffectWithCleanup { observer.disconnect() }
@@ -165,15 +165,9 @@ fun useSize(rRef: RMutableRef<Element?>): Size {
   return size
 }
 
-fun useWidth(rRef: RMutableRef<Element?>) = useSize(rRef).width
-external interface BoxSize {
-  val blockSize: Int
-  val inlineSize: Int
-}
-
 external interface ResizeObserverEntry {
   val target: Element?
-  val contentBoxSize: Array<BoxSize>
+  val contentRect: DOMRectReadOnly
 }
 
 external class ResizeObserver(callback: (Array<ResizeObserverEntry>) -> Unit) {

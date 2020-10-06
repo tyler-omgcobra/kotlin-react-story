@@ -18,10 +18,9 @@ data class CalendarConfig (
     var chosen: LocalDate? = null,
     var select: (LocalDate) -> Unit
 ) {
-  private val daysToSubtract = (start.dayOfWeek.ordinal - startDay.ordinal + 7) % 7
-  val calStart = start + DatePeriod(days = -daysToSubtract)
+  val calStart = start.last(startDay)
   private val lastDate = start + DatePeriod(days = days)
-  val calMax = days + daysToSubtract
+  val calMax = calStart.daysUntil(lastDate)
   val weeks = (calMax + 6) / 7
   val dateRange = start..lastDate + DatePeriod(days = -1)
 }
@@ -33,7 +32,7 @@ interface CalendarProps : RProps {
 val Calendar: RClass<CalendarProps> = rFunction(::Calendar.name) { props ->
   val calRef: RMutableRef<Element?> = useRef(null)
 
-  val width = useWidth(calRef)
+  val width = useSize(calRef).width
   val wide = width > 600
 
   val config = props.config
