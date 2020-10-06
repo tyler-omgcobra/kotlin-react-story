@@ -49,6 +49,10 @@ operator fun LocalDate.minus(period: DatePeriod) = plus(DatePeriod(
 fun LocalDate.last(targetDayOfWeek: DayOfWeek) =
   minus(DatePeriod(days = (dayOfWeek.ordinal - targetDayOfWeek.ordinal + 7) % 7))
 
+fun week(startingAt: DayOfWeek = DayOfWeek.SUNDAY, limit: Int = 7) =
+  (DayOfWeek.values() + DayOfWeek.values())
+    .slice(startingAt.ordinal until startingAt.ordinal + minOf(7, limit))
+
 class IdGenerator(private var value: Int = 0) {
   val next: Int
     get() = value++
@@ -150,8 +154,8 @@ fun <T : CommonAttributeGroupFacade, S> RDOMBuilder<T>.updateClick(updateState: 
   }
 }
 
-fun useSize(rRef: RMutableRef<Element?>): DOMRectReadOnly {
-  val (size, setSize) = useState(DOMRectReadOnly(0.0, 0.0, 0.0, 0.0))
+fun useSize(rRef: RMutableRef<out Element?>, assumedSize: DOMRectReadOnly = DOMRectReadOnly(0.0, 0.0, 0.0, 0.0)): DOMRectReadOnly {
+  val (size, setSize) = useState(assumedSize)
   val debounced: (DOMRectReadOnly) -> Unit = debounce { setSize(it as DOMRectReadOnly) }
   val observer = ResizeObserver { it.forEach { box -> debounced(box.contentRect) } }
 

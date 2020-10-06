@@ -74,8 +74,8 @@ val SideBar: RClass<SideBarProps> = rFunction(displayName = ::SideBar.name) { pr
         width = barWidth
       }
       attrs {
-        onMouseOverFunction = { if (it.target !is HTMLButtonElement) setOpen(true) }
-        onMouseLeaveFunction = { setOpen(pinned) }
+        onMouseOverFunction = { if (!open && it.target !is HTMLButtonElement) setOpen(true) }
+        onMouseLeaveFunction = { if (!pinned) setOpen(false) }
       }
       SideBarTray {}
       SideBarBody {}
@@ -122,7 +122,10 @@ private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
       }
     }
     HorizontalLayout {
-      attrs { spacing = 1.em }
+      attrs {
+        spacing = 1.em
+        css = { width = LinearDimension.fitContent }
+      }
       if (config.showHistory) {
         themedButton {
           +FontAwesome.arrow_left

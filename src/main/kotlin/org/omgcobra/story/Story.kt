@@ -5,7 +5,6 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.css.*
 import kotlinx.css.properties.*
-import kotlinx.html.*
 import org.omgcobra.story.components.*
 import org.omgcobra.story.styles.*
 import org.omgcobra.story.styles.themes.*
@@ -175,7 +174,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
           attrs {
             ref = storyRef
             spacing = 1.em
-            styles = {
+            css = {
               transition(::opacity, .4.s, Timing.easeIn)
               put("--scroll-bar-color", theme.surface3dp.toString())
               backgroundColor = theme.background
@@ -239,14 +238,7 @@ fun useUI() = useContext(UIContext)
 interface LayoutProps : RProps {
   var spacing: LinearDimension?
   var align: Align?
-  var styles: (StyledElement.() -> Unit)?
-}
-
-private fun StyledDOMBuilder<DIV>.applyProps(props: LayoutProps) {
-  inlineStyles {
-    props.styles?.let { apply(it) }
-  }
-  props.children()
+  var css: RuleSet?
 }
 
 val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
@@ -257,9 +249,11 @@ val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
       setCustomProperty("left-spacing", 0.em)
       flexDirection = FlexDirection.column
       alignItems = props.align ?: Align.flexStart
+      height = 100.pct
+      props.css?.let { apply(it) }
     }
     attrs { ref = rRef }
-    applyProps(props)
+    props.children()
   }
 }
 
@@ -271,9 +265,11 @@ val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef
       setCustomProperty("left-spacing", props.spacing ?: 0.em)
       flexDirection = FlexDirection.row
       alignItems = props.align ?: Align.flexStart
+      width = 100.pct
+      props.css?.let { apply(it) }
     }
     attrs { ref = rRef }
-    applyProps(props)
+    props.children()
   }
 }
 

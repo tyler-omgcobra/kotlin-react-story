@@ -2,9 +2,11 @@ package org.omgcobra.story.components
 
 import kotlinx.css.*
 import kotlinx.css.properties.border
+import kotlinx.css.properties.borderLeft
 import kotlinx.datetime.*
 import org.omgcobra.story.*
 import org.omgcobra.story.styles.ComponentStyles
+import org.w3c.dom.DOMRectReadOnly
 import org.w3c.dom.Element
 import react.*
 import react.dom.*
@@ -29,57 +31,47 @@ interface CalendarProps : RProps {
   var config: CalendarConfig
 }
 
+private val CalendarSkinny: RClass<RProps> = rFunction(::CalendarSkinny.name) { props ->
+  val config = useContext(CalendarConfigContext)
+  val theme = useUI().uiState.theme
+  VerticalLayout {
+    attrs {
+      align = Align.stretch
+      css = {
+        border(1.px, BorderStyle.solid, theme.border.withAlpha(0.5))
+        minWidth = LinearDimension.maxContent
+        maxWidth = (widthStop / 2).px
+      }
+    }
+    (0 until config.days).forEach { day ->
+      CalendarDateContext.Provider(config.start + DatePeriod(days = day)) {
+        CalendarDay {
+          attrs {
+            css = {
+              !firstChild {
+                borderTopWidth = 1.px
+              }
+            }
+          }
+          props.children()
+        }
+      }
+    }
+  }
+}
+
+private const val widthStop = 600
+
 val Calendar: RClass<CalendarProps> = rFunction(::Calendar.name) { props ->
   val calRef: RMutableRef<Element?> = useRef(null)
-
-  val width = useSize(calRef).width
-  val wide = width > 600
-
-  val config = props.config
+  val width = useSize(calRef, DOMRectReadOnly(0.0, 0.0, widthStop.toDouble(), 0.0)).width
+  val calendar = if (width > widthStop) CalendarTable else CalendarSkinny
 
   div {
     attrs { ref = calRef }
-    CalendarConfigContext.Provider(config) {
-      if (wide) {
-        CalendarTable {
-          thead {
-            tr {
-              (DayOfWeek.values() + DayOfWeek.values())
-                .slice(config.startDay.ordinal until config.startDay.ordinal + minOf(7, config.calMax))
-                .forEach {
-                  th { +it.name.toLowerCase().capitalize().substring(0..2) }
-                }
-            }
-          }
-          tbody {
-            (0 until config.weeks).forEach { week ->
-              tr {
-                (1..minOf(7, config.calMax)).forEach { day ->
-                  CalendarDateContext.Provider(config.calStart + DatePeriod(days = (day - 1) + 7 * week)) {
-                    td {
-                      TableCell {
-                        props.children()
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      } else {
-        VerticalLayout {
-          attrs {
-            align = Align.stretch
-          }
-          (0 until config.days).forEach { day ->
-            CalendarDateContext.Provider(config.start + DatePeriod(days = day)) {
-              TableCell {
-                props.children()
-              }
-            }
-          }
-        }
+    CalendarConfigContext.Provider(props.config) {
+      calendar {
+        props.children()
       }
     }
   }
@@ -89,27 +81,68 @@ private val CalendarConfigContext = createContext<CalendarConfig>()
 val CalendarDateContext = createContext<LocalDate>()
 
 private val CalendarTable: RClass<RProps> = rFunction(::CalendarTable.name) { props ->
+  val config = useContext(CalendarConfigContext)
   val theme = useUI().uiState.theme
-  styledTable {
-    css {
-      width = 100.pct
-      height = 100.pct
-      // minHeight = 9.em * config.weeks
-      "th" {
-        width = (100 / 7).pct
-        padding(0.5.em)
+  val weeks = 0 until config.weeks
+  val calWeek = week(startingAt = config.startDay, limit = config.calMax)
+
+  HorizontalLayout {
+    attrs {
+      align = Align.stretch
+      css = {
         border(1.px, BorderStyle.solid, theme.border)
+        minWidth = widthStop.px
       }
     }
-    props.children()
+    week(startingAt = config.startDay, limit = config.calMax).forEach {
+      styledDiv {
+        css {
+          textAlign = TextAlign.center
+          fontWeight = FontWeight.w700
+          flex(flexGrow = 1.0, flexShrink = 1.0, flexBasis = 0.px)
+          !firstChild {
+            borderLeft(1.px, BorderStyle.solid, theme.border)
+          }
+        }
+        +it.name.toLowerCase().capitalize().substring(0..2)
+      }
+    }
   }
+  weeks.forEach { week ->
+    HorizontalLayout {
+      attrs {
+        align = Align.stretch
+        css = {
+          border(1.px, BorderStyle.solid, theme.border.withAlpha(0.5))
+          borderTopWidth = 0.px
+        }
+      }
+      calWeek.forEachIndexed { day, _ ->
+        CalendarDateContext.Provider(config.calStart + DatePeriod(days = day + 7 * week)) {
+          CalendarDay {
+            attrs {
+              css = {
+                flex(flexGrow = 1.0, flexShrink = 1.0, flexBasis = 0.px)
+                !firstChild {
+                  borderLeftWidth = 1.px
+                }
+              }
+            }
+            props.children()
+          }
+        }
+      }
+    }
+  }
+
 }
 
 private interface TableCellProps : RProps {
   var date: LocalDate
+  var css: RuleSet?
 }
 
-private val TableCell: RClass<TableCellProps> = rFunction(::TableCell.name) { props ->
+private val CalendarDay: RClass<TableCellProps> = forwardRef(::CalendarDay.name) { props, rRef ->
   val config = useContext(CalendarConfigContext)
   val date = useContext(CalendarDateContext)
   val theme = useUI().uiState.theme
@@ -120,10 +153,14 @@ private val TableCell: RClass<TableCellProps> = rFunction(::TableCell.name) { pr
   val dateDisplay = "$prefix${date.dayOfMonth}"
 
   styledDiv {
+    attrs {
+      ref = rRef
+    }
     css {
       minHeight = 6.em
+      minWidth = 6.em
       padding(0.5.em)
-      border(1.px, BorderStyle.solid, theme.border.withAlpha(0.5))
+      border(0.px, BorderStyle.solid, theme.border.withAlpha(0.5))
       verticalAlign = VerticalAlign.textTop
       if (inRange) {
         +ComponentStyles.highlight
@@ -134,6 +171,7 @@ private val TableCell: RClass<TableCellProps> = rFunction(::TableCell.name) { pr
         opacity = 0.6
         userSelect = UserSelect.none
       }
+      props.css?.let { +it }
     }
     if (inRange) {
       click(Key.Enter, Key.Space) { config.select(date) }
