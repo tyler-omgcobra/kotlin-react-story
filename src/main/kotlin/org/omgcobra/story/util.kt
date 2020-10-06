@@ -133,7 +133,7 @@ fun <S : StoryState> RBuilder.withState(block: RBuilder.(S, Dispatcher<S>) -> Un
   block(state, updateState)
 }
 
-fun <T : CommonAttributeGroupFacade, S : StoryState> RDOMBuilder<T>.updateClick(updateState: Dispatcher<S>, block: S.() -> Unit) {
+fun <T : CommonAttributeGroupFacade, S> RDOMBuilder<T>.updateClick(updateState: Dispatcher<S>, block: S.() -> Unit) {
   attrs {
     onClickFunction = {
       updateState(block)
