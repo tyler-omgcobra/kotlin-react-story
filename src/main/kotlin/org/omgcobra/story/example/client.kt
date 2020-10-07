@@ -15,40 +15,41 @@ interface ExampleState : StoryState {
   var test: String
 }
 
+val LeftContent: RClass<RProps> = rFunction(::LeftContent.name) {
+  val (state) = useStoryState<ExampleState>()
+
+  p {
+    +state.test
+  }
+}
+
+val LeftButtons: RClass<RProps> = rFunction(::LeftButtons.name) {
+  val uiHolder = useUI()
+  val theme = uiHolder.uiState.theme
+  val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { this.theme = it } }
+
+  li {
+    themedButton(variants = setOf(ButtonVariant.Tertiary)) {
+      +"Toggle Theme"
+      attrs {
+        onClickFunction = {
+          setTheme(if (theme == MaterialDark) Material else MaterialDark)
+        }
+      }
+    }
+  }
+}
+
 val leftBar = SideBarConfig(
-    content = {
-      StoryContext.Consumer { modifier ->
-        p {
-          +modifier.current.unsafeCast<ExampleState>().test
-        }
-      }
-      // val (state) = useStoryState<ExampleState>()
-      // p {
-      //   +state.test
-      // }
-    },
-    buttons = {
-      val uiHolder = useUI()
-      val theme = uiHolder.uiState.theme
-      val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { this.theme = it } }
-      li {
-        themedButton(variants = setOf(ButtonVariant.Tertiary)) {
-          +"Toggle Theme"
-          attrs {
-            onClickFunction = {
-              setTheme(if (theme == MaterialDark) Material else MaterialDark)
-            }
-          }
-        }
-      }
-    },
+    content = { LeftContent {} },
+    buttons = { LeftButtons {} },
     showFullscreen = true,
     showRestart = true,
     showSaves = true,
     showHistory = true
 )
 
-val rightBar = SideBarConfig(right = true, content = {
+val RightContent: RClass<RProps> = rFunction(::RightContent.name) {
   val (state) = useStoryState<ExampleState>()
   p {
     +"Right bar"
@@ -56,14 +57,16 @@ val rightBar = SideBarConfig(right = true, content = {
   p {
     +state.test.repeat(3)
   }
-})
+}
+
+val rightBar = SideBarConfig(right = true, content = { RightContent {} })
 
 val Ex: RClass<RProps> = rFunction(::Ex.name) {
-  val updateState = useStoryState<ExampleState>().modifier
+  val updateState = useStoryState<ExampleState>().setState
   val uiHolder = useUI()
   val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { theme = it } }
 
-  themedButton {
+  themedButton(variants = setOf(ButtonVariant.Success)) {
     +"button"
     attrs {
       onClickFunction = {
@@ -85,12 +88,8 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
   }
   themedButton(variants = setOf(ButtonVariant.Box)) {
     +"Calendar"
-    attrs {
-      onClickFunction = {
-        updateState {
-          passage = ExCal
-        }
-      }
+    updateClick(updateState) {
+      passage = ExCal
     }
   }
   hr {}
@@ -139,7 +138,6 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
 
 val ExTwo: RClass<RProps> = rFunction(::ExTwo.name) {
   val (state, updateState) = useStoryState<ExampleState>()
-  val back = useUI().back
   p {
     +"You got to the second page!"
     br {}
@@ -165,18 +163,10 @@ val ExTwo: RClass<RProps> = rFunction(::ExTwo.name) {
       }
     }
   }
-  themedButton {
-    +"Back"
-    attrs {
-      onClickFunction = {
-        back()
-      }
-    }
-  }
+  BackButton {}
 }
 
 val ExCal: RClass<RProps> = rFunction(::ExCal.name) {
-  val back = useUI().back
   val (chosen, setChosen) = useState(LocalDate(2020, 10, 10))
 
   val calConfig = CalendarConfig(
@@ -186,19 +176,15 @@ val ExCal: RClass<RProps> = rFunction(::ExCal.name) {
       select = { setChosen(it) }
   )
 
-  Calendar {
-    attrs {
-      config = calConfig
-    }
-  }
-  themedButton {
-    +"Back"
-    attrs {
-      onClickFunction = {
-        back()
+  div {
+    inlineStyles { width = 100.pct }
+    Calendar {
+      attrs {
+        config = calConfig
       }
     }
   }
+  BackButton {}
 }
 
 val initialState: ExampleState = jsObject {

@@ -134,7 +134,6 @@ private val CalendarTable: RClass<RProps> = rFunction(::CalendarTable.name) { pr
       }
     }
   }
-
 }
 
 private interface TableCellProps : RProps {

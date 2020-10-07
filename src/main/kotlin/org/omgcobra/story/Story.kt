@@ -275,7 +275,7 @@ val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef
 
 val UIContext: RContext<UIHolder> = createContext()
 
-data class Modifier<T>(var current: T, var modifier: Dispatcher<T>)
+data class Modifier<T>(var state: T, var setState: Dispatcher<T>)
 
 data class UIHolder(
     var uiState: UIState,

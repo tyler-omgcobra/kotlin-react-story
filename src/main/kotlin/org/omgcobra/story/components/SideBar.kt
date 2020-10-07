@@ -47,7 +47,7 @@ interface SideBarProps : RProps {
   var config: SideBarConfig
 }
 
-val SideBar: RClass<SideBarProps> = rFunction(displayName = ::SideBar.name) { props ->
+val SideBar: RClass<SideBarProps> = rFunction(::SideBar.name) { props ->
   val (uiState, setUIState) = useUI()
   val theme = uiState.theme
   val config = props.config
