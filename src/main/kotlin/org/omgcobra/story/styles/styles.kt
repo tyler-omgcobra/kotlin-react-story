@@ -204,16 +204,6 @@ object ComponentStyles : StyleSheet("story") {
       }
     }
   }
-
-  val flexLayout by css {
-    display = Display.flex
-    children {
-      !firstChild {
-        marginTop = LinearDimension("var(--top-spacing, 0em)")
-        marginLeft = LinearDimension("var(--left-spacing, 0em)")
-      }
-    }
-  }
 }
 
 operator fun QuotedString.plus(other: QuotedString) = QuotedString(value = value + other.value)

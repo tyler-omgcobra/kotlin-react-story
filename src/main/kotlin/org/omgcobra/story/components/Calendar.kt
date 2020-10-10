@@ -6,6 +6,7 @@ import kotlinx.css.properties.borderLeft
 import kotlinx.datetime.*
 import org.omgcobra.story.*
 import org.omgcobra.story.styles.ComponentStyles
+import org.omgcobra.story.styles.FontAwesome
 import org.w3c.dom.DOMRectReadOnly
 import org.w3c.dom.Element
 import react.*
@@ -50,6 +51,7 @@ private val CalendarSkinny: RClass<RProps> = rFunction(::CalendarSkinny.name) { 
             css = {
               !firstChild {
                 borderTopWidth = 1.px
+                marginTop = 0.px
               }
             }
           }
@@ -125,6 +127,7 @@ private val CalendarTable: RClass<RProps> = rFunction(::CalendarTable.name) { pr
                 flex(flexGrow = 1.0, flexShrink = 1.0, flexBasis = 0.px)
                 !firstChild {
                   borderLeftWidth = 1.px
+                  marginLeft = 0.px
                 }
               }
             }
@@ -160,6 +163,16 @@ private val CalendarDay: RClass<TableCellProps> = forwardRef(::CalendarDay.name)
       minWidth = 6.em
       padding(0.5.em)
       border(0.px, BorderStyle.solid, theme.border.withAlpha(0.5))
+      if (today) {
+        border(1.px, BorderStyle.solid, theme.highlight)
+        margin((-1).px)
+        zIndex = 1
+      }
+      if (chosen) {
+        border(1.px, BorderStyle.solid, Color.cornflowerBlue)
+        margin((-1).px)
+        zIndex = 1
+      }
       verticalAlign = VerticalAlign.textTop
       if (inRange) {
         +ComponentStyles.highlight
@@ -177,10 +190,25 @@ private val CalendarDay: RClass<TableCellProps> = forwardRef(::CalendarDay.name)
     }
     div {
       inlineStyles {
+        position = Position.relative
         marginBottom = 0.5.em
         if (today) color = theme.highlight
       }
       +dateDisplay
+
+      if (today) {
+        span {
+          inlineStyles {
+            position = Position.absolute
+            border(0.px, BorderStyle.solid, Color.currentColor)
+            borderLeftWidth = 1.px
+            borderBottomWidth = 1.px
+            right = ((-.5).em)
+            top = ((-.5).em)
+          }
+          +" ${FontAwesome.star}"
+        }
+      }
     }
     props.children()
   }

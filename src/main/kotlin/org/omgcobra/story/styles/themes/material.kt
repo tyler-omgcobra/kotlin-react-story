@@ -24,7 +24,7 @@ object Material : Theme {
 
   override val link = Color.blue
 
-  override val highlight = Color.limeGreen.darken(50)
+  override val highlight = rgb(0x68, 0x75, 0x43)
 }
 
 object MaterialDark : Theme {

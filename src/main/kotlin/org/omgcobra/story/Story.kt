@@ -244,9 +244,8 @@ interface LayoutProps : RProps {
 val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
   styledDiv {
     css {
-      +ComponentStyles.flexLayout
-      setCustomProperty("top-spacing", props.spacing ?: 0.em)
-      setCustomProperty("left-spacing", 0.em)
+      display = Display.flex
+      props.spacing?.let { children { !firstChild { marginTop = it } } }
       flexDirection = FlexDirection.column
       alignItems = props.align ?: Align.flexStart
       height = 100.pct
@@ -260,9 +259,8 @@ val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
 val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef ->
   styledDiv {
     css {
-      +ComponentStyles.flexLayout
-      setCustomProperty("top-spacing", 0.em)
-      setCustomProperty("left-spacing", props.spacing ?: 0.em)
+      display = Display.flex
+      props.spacing?.let { children { !firstChild { marginLeft = it } } }
       flexDirection = FlexDirection.row
       alignItems = props.align ?: Align.flexStart
       width = 100.pct
