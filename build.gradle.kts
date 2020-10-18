@@ -3,7 +3,7 @@ plugins {
   kotlin("js") version "1.4.10"
 }
 group = "org.omgcobra"
-version = "0.1.0"
+version = "0.1.1"
 
 kotlin {
   js {
@@ -43,10 +43,10 @@ publishing {
   publications {
     create<MavenPublication>("default") {
       from(components["kotlin"])
-      // artifact(tasks.getByName("kotlinSourcesJar"))
-      groupId = "org.omgcobra"
-      artifactId = "kotlin-react-story"
-      version = "0.1.0"
+      artifact(tasks["kotlinSourcesJar"])
+      groupId = project.group as String
+      artifactId = project.name
+      version = project.version as String
       pom.withXml {
         val root = asNode()
         root.appendNode("name", "Kotlin React Story")
