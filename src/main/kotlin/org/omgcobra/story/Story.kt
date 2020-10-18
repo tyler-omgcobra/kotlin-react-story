@@ -230,53 +230,6 @@ fun <S : Any> S.usePrevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
 fun <S : StoryState> useStoryState(): Modifier<S> = useContext(StoryContext).unsafeCast<Modifier<S>>()
 fun useUI() = useContext(UIContext)
 
-interface LayoutProps : RProps {
-  var spacing: LinearDimension?
-  var align: Align?
-  var css: RuleSet?
-}
-
-val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
-  layoutDiv(
-      direction = FlexDirection.column,
-      props = props,
-      rRef = rRef,
-      sizing = { height = 100.pct },
-      spacing = { marginTop = it }
-  )
-}
-
-fun RBuilder.layoutDiv(
-    direction: FlexDirection,
-    props: LayoutProps,
-    rRef: RRef,
-    sizing: CSSBuilder.() -> Unit,
-    spacing: CSSBuilder.(LinearDimension) -> Unit
-) {
-  styledDiv {
-    css {
-      display = Display.flex
-      props.spacing?.let { children { !firstChild { spacing(it) } } }
-      flexDirection = direction
-      alignItems = props.align ?: Align.flexStart
-      sizing()
-      props.css?.let { apply(it) }
-    }
-    attrs { ref = rRef }
-    props.children()
-  }
-}
-
-val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef ->
-  layoutDiv(
-      direction = FlexDirection.row,
-      props = props,
-      rRef = rRef,
-      sizing = { width = 100.pct },
-      spacing = { marginLeft = it }
-  )
-}
-
 val UIContext: RContext<UIHolder> = createContext()
 
 data class Modifier<T>(var state: T, var setState: Dispatcher<T>)
