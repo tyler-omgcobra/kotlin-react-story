@@ -14,12 +14,6 @@ kotlin {
       runTask {
         cssSupport.enabled = true
       }
-      testTask {
-        useKarma {
-          useChromeHeadless()
-          webpackConfig.cssSupport.enabled = true
-        }
-      }
     }
     useCommonJs()
   }
