@@ -148,12 +148,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
   val restart = {
     setUIState { goingBack = true }
     setState {
-      val onRestart = props.onRestart
-      if (onRestart != null) {
-        onRestart()
-      } else {
-        Object.assign(this, initialState)
-      }
+      props.onRestart?.let { it() } ?: Object.assign(this, initialState)
     }
   }
 
@@ -242,13 +237,29 @@ interface LayoutProps : RProps {
 }
 
 val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
+  layoutDiv(
+      direction = FlexDirection.column,
+      props = props,
+      rRef = rRef,
+      sizing = { height = 100.pct },
+      spacing = { marginTop = it }
+  )
+}
+
+fun RBuilder.layoutDiv(
+    direction: FlexDirection,
+    props: LayoutProps,
+    rRef: RRef,
+    sizing: CSSBuilder.() -> Unit,
+    spacing: CSSBuilder.(LinearDimension) -> Unit
+) {
   styledDiv {
     css {
       display = Display.flex
-      props.spacing?.let { children { !firstChild { marginTop = it } } }
-      flexDirection = FlexDirection.column
+      props.spacing?.let { children { !firstChild { spacing(it) } } }
+      flexDirection = direction
       alignItems = props.align ?: Align.flexStart
-      height = 100.pct
+      sizing()
       props.css?.let { apply(it) }
     }
     attrs { ref = rRef }
@@ -257,18 +268,13 @@ val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
 }
 
 val HorizontalLayout = forwardRef<LayoutProps>("HorizontalLayout") { props, rRef ->
-  styledDiv {
-    css {
-      display = Display.flex
-      props.spacing?.let { children { !firstChild { marginLeft = it } } }
-      flexDirection = FlexDirection.row
-      alignItems = props.align ?: Align.flexStart
-      width = 100.pct
-      props.css?.let { apply(it) }
-    }
-    attrs { ref = rRef }
-    props.children()
-  }
+  layoutDiv(
+      direction = FlexDirection.row,
+      props = props,
+      rRef = rRef,
+      sizing = { width = 100.pct },
+      spacing = { marginLeft = it }
+  )
 }
 
 val UIContext: RContext<UIHolder> = createContext()
