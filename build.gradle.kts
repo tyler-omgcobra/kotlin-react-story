@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.utils.loadPropertyFromResources
+import java.util.Properties
+
 plugins {
   id("maven-publish")
   kotlin("js") version "1.4.10"
@@ -33,6 +36,11 @@ dependencies {
   implementation("org.jetbrains:kotlin-react-router-dom:5.1.2-pre.123-kotlin-1.4.10")
   implementation("org.jetbrains:kotlin-styled:5.2.0-pre.123-kotlin-1.4.10")
 }
+
+val localProperties = Properties().apply {
+  load(project.file("local.properties").inputStream())
+}
+
 publishing {
   publications {
     create<MavenPublication>("default") {
@@ -55,16 +63,8 @@ publishing {
       val name = "kotlin-react-story"
       url = uri("https://api.bintray.com/maven/$user/$repo/$name/;publish=0")
       credentials {
-        username = if (project.hasProperty("bintrayUser")) {
-          project.property("bintrayUser") as String?
-        } else {
-          System.getenv("BINTRAY_USER")
-        }
-        password = if (project.hasProperty("bintrayApiKey")) {
-          project.property("bintrayApiKey") as String?
-        } else {
-          System.getenv("BINTRAY_API_KEY")
-        }
+        username = localProperties["bintrayUser"] as? String ?: System.getenv("BINTRAY_USER")
+        password = localProperties["bintrayApiKey"] as? String ?: System.getenv("BINTRAY_API_KEY")
       }
     }
   }
