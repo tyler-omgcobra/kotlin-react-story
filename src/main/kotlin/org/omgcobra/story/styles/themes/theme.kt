@@ -3,10 +3,10 @@ package org.omgcobra.story.styles.themes
 import kotlinx.css.*
 import kotlinx.html.*
 import org.omgcobra.story.UIContext
-import org.omgcobra.story.mergeStyle
 import org.omgcobra.story.styles.FontAwesome
 import react.*
 import react.dom.*
+import styled.*
 import kotlin.reflect.KProperty1
 
 interface Theme {
@@ -35,11 +35,10 @@ interface Theme {
 inline fun RBuilder.themedA(
     href: String? = null,
     target: String? = null,
-    classes: String? = null,
-    crossinline block: RDOMBuilder<A>.() -> Unit
+    crossinline block: StyledDOMBuilder<A>.() -> Unit
 ): ReactElement =
   UIContext.Consumer { uiHolder ->
-    a(href, target, classes) {
+    styledA(href, target) {
       block()
 
       themed(theme = uiHolder.uiState.theme, colorProp = Theme::link)
@@ -50,13 +49,13 @@ inline fun RBuilder.themedA(
     }
   }
 
-fun <T : Tag> RDOMBuilder<T>.themed(
+fun <T : Tag> StyledDOMBuilder<T>.themed(
     vararg variants: Variant,
     theme: Theme,
     backgroundColorProp: KProperty1<Theme, Color> = Theme::background,
     colorProp: KProperty1<Theme, Color> = Theme::onBackground
 ) {
-  mergeStyle {
+  css {
     backgroundColor = backgroundColorProp.get(theme)
     color = colorProp.get(theme)
     variants.forEach { (it.buildStyles)(theme) }
@@ -67,12 +66,11 @@ inline fun RBuilder.themedButton(
     formEncType: ButtonFormEncType? = null,
     formMethod: ButtonFormMethod? = null,
     type: ButtonType? = null,
-    classes: String? = null,
     variants: Collection<ButtonVariant>? = null,
-    crossinline block: RDOMBuilder<BUTTON>.() -> Unit
+    crossinline block: StyledDOMBuilder<BUTTON>.() -> Unit
 ): ReactElement =
   UIContext.Consumer { uiHolder ->
-    button(formEncType, formMethod, type, classes) {
+    styledButton(formEncType, formMethod, type) {
       block()
 
       val variantList: Collection<ButtonVariant> = variants ?: listOf()
@@ -85,10 +83,10 @@ inline fun RBuilder.themedButton(
   }
 
 interface Variant {
-  val buildStyles: StyledElement.(Theme) -> Unit
+  val buildStyles: CSSBuilder.(Theme) -> Unit
 }
 
-enum class ButtonVariant(override val buildStyles: StyledElement.(Theme) -> Unit) : Variant {
+enum class ButtonVariant(override val buildStyles: CSSBuilder.(Theme) -> Unit) : Variant {
   Success({
     backgroundColor = it.success
     color = it.successContrast

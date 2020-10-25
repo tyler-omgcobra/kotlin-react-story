@@ -9,7 +9,8 @@ import org.omgcobra.story.components.*
 import org.omgcobra.story.styles.themes.*
 import react.*
 import react.dom.*
-import styled.inlineStyles
+import styled.css
+import styled.styledDiv
 
 interface ExampleState : StoryState {
   var test: String
@@ -111,14 +112,14 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
       }
     }
     themedA {
-      inlineStyles { marginLeft = 1.em }
+      css { marginLeft = 1.em }
       attrs {
         href = "https://google.com"
       }
       +"Google"
     }
     themedA(href = "https://yahoo.com") {
-      inlineStyles { marginLeft = 1.em }
+      css { marginLeft = 1.em }
       +"Yahoo"
     }
   }
@@ -176,8 +177,8 @@ val ExCal: RClass<RProps> = rFunction(::ExCal.name) {
       select = { setChosen(it) }
   )
 
-  div {
-    inlineStyles { width = 100.pct }
+  styledDiv {
+    css { width = 100.pct }
     Calendar {
       attrs {
         config = calConfig

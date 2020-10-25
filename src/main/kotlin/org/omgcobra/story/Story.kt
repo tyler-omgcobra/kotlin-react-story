@@ -55,7 +55,7 @@ fun <S : StoryState> S.toJSON(): String {
 fun String.hydrate(uiHolder: UIHolder): StoryState {
   val obj = JSON.parse<dynamic>(this)
   obj.passage = uiHolder.componentMap[obj.passage]
-  if (obj.last != null) obj.last = obj.last.unsafeCast<String>().hydrate(uiHolder)
+  obj.last = obj.last?.unsafeCast<String>()?.hydrate(uiHolder)
   return obj.unsafeCast<StoryState>()
 }
 

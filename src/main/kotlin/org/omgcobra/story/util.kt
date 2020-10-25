@@ -11,7 +11,7 @@ import org.w3c.dom.events.Event
 import org.w3c.dom.events.KeyboardEvent
 import react.*
 import react.dom.*
-import styled.toStyle
+import styled.*
 import kotlin.math.*
 
 fun Double.asMoney(
@@ -131,13 +131,6 @@ fun useUpdate(dependencies: RDependenciesList? = null, effect: () -> Unit) {
     } else {
       effect()
     }
-  }
-}
-
-@Suppress("UnsafeCastFromDynamic")
-fun <T : Tag> RDOMBuilder<T>.mergeStyle(block: StyledElement.() -> Unit) {
-  attrs {
-    setProp("style", Object.assign(StyledElement().apply(block).toStyle(), get("style")))
   }
 }
 

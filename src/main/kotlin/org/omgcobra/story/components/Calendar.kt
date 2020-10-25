@@ -188,17 +188,17 @@ private val CalendarDay: RClass<TableCellProps> = forwardRef(::CalendarDay.name)
     if (inRange) {
       click(Key.Enter, Key.Space) { config.select(date) }
     }
-    div {
-      inlineStyles {
+    styledDiv {
+      css {
         position = Position.relative
         marginBottom = 0.5.em
         if (today) color = theme.highlight
       }
       +dateDisplay
 
-      if (today) {
-        span {
-          inlineStyles {
+      styledSpan {
+        if (today) {
+          css {
             position = Position.absolute
             border(0.px, BorderStyle.solid, Color.currentColor)
             borderLeftWidth = 1.px

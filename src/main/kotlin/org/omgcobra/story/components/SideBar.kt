@@ -64,8 +64,6 @@ val SideBar: RClass<SideBarProps> = rFunction(::SideBar.name) { props ->
     styledDiv {
       css {
         +ComponentStyles.sideBar
-      }
-      inlineStyles {
         backgroundColor = theme.surface
         color = theme.onSurface
         val sideProperty = if (config.right) ::right else ::left
@@ -99,8 +97,8 @@ private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
   val (storyState) = useStoryState<StoryState>()
 
   styledDiv {
-    if (config.right) inlineStyles { flexDirection = FlexDirection.rowReverse }
     css {
+      if (config.right) flexDirection = FlexDirection.rowReverse
       +ComponentStyles.sideBarTray
     }
     div {
@@ -173,8 +171,6 @@ private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
   styledDiv {
     css {
       +ComponentStyles.sideBarBody
-    }
-    inlineStyles {
       put("--scroll-bar-color", theme.surface3dp.toString())
       if (!open) {
         transition(::visibility, 0.2.s, Timing.stepEnd)
@@ -189,8 +185,8 @@ private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
       div {
         +config.banner
       }
-      h1 {
-        inlineStyles {
+      styledH1 {
+        css {
           margin(all = 0.em)
           fontSize = 162.5.pct
         }
@@ -202,8 +198,8 @@ private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
       div {
         attrs { id = "story-title-separator" }
       }
-      p {
-        inlineStyles {
+      styledP {
+        css {
           marginTop = 2.em
           fontWeight = FontWeight.w700
         }
@@ -213,11 +209,11 @@ private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
     div {
       apply(config.content)
     }
-    nav {
+    styledNav {
       attrs {
         role = "navigation"
       }
-      inlineStyles {
+      css {
         borderColor = theme.border
       }
       ul {
