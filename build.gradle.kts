@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.utils.loadPropertyFromResources
 import java.util.Properties
 
 plugins {
@@ -28,13 +27,20 @@ repositories {
   maven("https://kotlin.bintray.com/kotlinx")
   maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
 }
+
+val kotlinVersion = "1.4.10"
+val reactVersion = "17.0.0"
+val releaseSuffix = "pre.126"
+val styledVersion = "5.2.0"
+
+fun release(version: String) = "$version-$releaseSuffix-kotlin-$kotlinVersion"
+
 dependencies {
-  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.1.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
-  implementation("org.jetbrains:kotlin-react:16.13.1-pre.123-kotlin-1.4.10")
-  implementation("org.jetbrains:kotlin-react-dom:16.13.1-pre.123-kotlin-1.4.10")
-  implementation("org.jetbrains:kotlin-react-router-dom:5.1.2-pre.123-kotlin-1.4.10")
-  implementation("org.jetbrains:kotlin-styled:5.2.0-pre.123-kotlin-1.4.10")
+  implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version = "0.1.0")
+  implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-html-js", version = "0.7.2")
+  implementation(group = "org.jetbrains", name = "kotlin-react", version = release(reactVersion))
+  implementation(group = "org.jetbrains", name = "kotlin-react-dom", version = release(reactVersion))
+  implementation(group = "org.jetbrains", name = "kotlin-styled", version = release(styledVersion))
 }
 
 val localProperties = Properties().apply {
