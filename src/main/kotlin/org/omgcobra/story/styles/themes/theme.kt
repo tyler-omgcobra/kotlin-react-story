@@ -4,6 +4,7 @@ import kotlinx.css.*
 import kotlinx.html.*
 import org.omgcobra.story.UIContext
 import org.omgcobra.story.styles.FontAwesome
+import org.omgcobra.story.useUI
 import react.*
 import react.dom.*
 import styled.*
@@ -62,23 +63,43 @@ fun <T : Tag> StyledDOMBuilder<T>.themed(
   }
 }
 
-inline fun RBuilder.themedButton(
+interface ThemedButtonProps : RProps {
+  var formEncType: ButtonFormEncType?
+  var formMethod: ButtonFormMethod?
+  var type: ButtonType?
+  var variants: Collection<ButtonVariant>?
+  var buttonBuilder: StyledDOMBuilder<BUTTON>.() -> Unit
+}
+
+val ThemedButton: RClass<ThemedButtonProps> = rFunction(::ThemedButton.name) { props ->
+  val uiHolder = useUI()
+
+  styledButton(formEncType = props.formEncType, formMethod = props.formMethod, type = props.type) {
+    (props.buttonBuilder)()
+
+    val variantList = props.variants ?: listOf()
+    themed(
+        *variantList.sorted().toTypedArray(),
+        theme = uiHolder.uiState.theme,
+        backgroundColorProp = Theme::surface2dp
+    )
+  }
+}
+
+fun RBuilder.themedButton(
     formEncType: ButtonFormEncType? = null,
     formMethod: ButtonFormMethod? = null,
     type: ButtonType? = null,
     variants: Collection<ButtonVariant>? = null,
-    crossinline block: StyledDOMBuilder<BUTTON>.() -> Unit
+    block: StyledDOMBuilder<BUTTON>.() -> Unit
 ): ReactElement =
-  UIContext.Consumer { uiHolder ->
-    styledButton(formEncType, formMethod, type) {
-      block()
-
-      val variantList: Collection<ButtonVariant> = variants ?: listOf()
-      themed(
-          *variantList.sorted().toTypedArray(),
-          theme = uiHolder.uiState.theme,
-          backgroundColorProp = Theme::surface2dp
-      )
+  ThemedButton {
+    attrs {
+      this.formEncType = formEncType
+      this.formMethod = formMethod
+      this.type = type
+      this.variants = variants
+      buttonBuilder = block
     }
   }
 

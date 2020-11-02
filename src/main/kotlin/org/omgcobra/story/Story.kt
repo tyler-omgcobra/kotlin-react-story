@@ -107,7 +107,8 @@ val Story = rFunction<StoryProps>("Story") { props ->
     theme = MaterialDark
     windowSize = WindowSize(width = window.innerWidth, height = window.innerHeight)
   }
-  val (uiState, setUIState) = initialUIState.useReducer()
+  val (uiStatePair, setUIState) = initialUIState.usePrevReducer()
+  val uiState = uiStatePair.first
   val storyRef = useRef<HTMLDivElement?>(null)
 
   useEffect(listOf()) {

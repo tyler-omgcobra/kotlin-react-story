@@ -71,7 +71,7 @@ fun <T : CommonAttributeGroupFacade> RDOMBuilder<T>.click(vararg keys: Key, bloc
     onKeyDownFunction = { event ->
       if (event.unsafeCast<KeyboardEvent>().key in keys.map { "$it" }) {
         event.preventDefault()
-        (event.target as HTMLElement).click()
+        event.target.unsafeCast<HTMLElement>().click()
       }
     }
   }
