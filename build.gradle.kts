@@ -5,7 +5,7 @@ plugins {
   kotlin("js") version "1.4.10"
 }
 group = "org.omgcobra"
-version = "0.1.2"
+version = "0.1.3"
 
 kotlin {
   js {
