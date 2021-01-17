@@ -48,6 +48,8 @@ operator fun LocalDate.minus(period: DatePeriod) = plus(DatePeriod(
 
 fun LocalDate.last(targetDayOfWeek: DayOfWeek) =
   minus(DatePeriod(days = (dayOfWeek.ordinal - targetDayOfWeek.ordinal + 7) % 7))
+fun LocalDate.next(targetDayOfWeek: DayOfWeek) =
+  plus(DatePeriod(days = (targetDayOfWeek.ordinal - dayOfWeek.ordinal + 7) % 7))
 
 fun week(startingAt: DayOfWeek = DayOfWeek.SUNDAY, limit: Int = 7) =
   (DayOfWeek.values() + DayOfWeek.values())
