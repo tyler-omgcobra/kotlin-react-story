@@ -2,10 +2,10 @@ import java.util.Properties
 
 plugins {
   id("maven-publish")
-  kotlin("js") version "1.4.10"
+  kotlin("js") version "1.4.20"
 }
 group = "org.omgcobra"
-version = "0.1.3"
+version = "0.1.4"
 
 kotlin {
   js {
@@ -28,9 +28,9 @@ repositories {
   maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
 }
 
-val kotlinVersion = "1.4.10"
+val kotlinVersion = "1.4.20"
 val reactVersion = "17.0.0"
-val releaseSuffix = "pre.126"
+val releaseSuffix = "pre.129"
 val styledVersion = "5.2.0"
 
 fun release(version: String) = "$version-$releaseSuffix-kotlin-$kotlinVersion"
