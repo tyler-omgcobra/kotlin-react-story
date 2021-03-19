@@ -1,8 +1,10 @@
 package org.omgcobra.story.components
 
 import kotlinx.css.*
+import kotlinx.html.DIV
 import org.omgcobra.story.forwardRef
 import react.*
+import react.dom.RDOMBuilder
 import styled.css
 import styled.styledDiv
 
@@ -19,6 +21,7 @@ interface LayoutProps : RProps {
   var align: Align?
   var justify: JustifyContent?
   var css: RuleSet?
+  var divAttrs: (DIV.() -> Unit)?
 }
 
 val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
@@ -51,7 +54,10 @@ fun RBuilder.layoutDiv(
         sizingFn()
         props.css?.let { apply(it) }
       }
-      attrs { ref = rRef }
+      attrs {
+        ref = rRef
+        props.divAttrs?.let { apply(it) }
+      }
       props.children()
     }
   }
