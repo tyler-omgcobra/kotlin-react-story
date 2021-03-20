@@ -14,16 +14,17 @@ import react.dom.*
 import styled.*
 import kotlin.math.*
 
-fun Double.asMoney(
+fun Number.asMoney(
     decimalPlaces: Int = 2,
     decimalSeparator: String = ".",
     thousandsSeparator: String = ",",
     currencySymbol: String = "$"
 ): String {
-  val sign = if (this < 0) "-" else ""
+  val double = toDouble()
+  val sign = if (double < 0) "-" else ""
   val places = 10.0.pow(decimalPlaces).toInt()
 
-  var intVal = round(this.absoluteValue * places).toInt()
+  var intVal = round(double.absoluteValue * places).toInt()
   var str = if (decimalPlaces > 0) {
     val s = decimalSeparator + "${intVal % places}".padStart(decimalPlaces, '0')
     intVal /= places
