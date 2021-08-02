@@ -6,7 +6,6 @@ import org.omgcobra.story.UIContext
 import org.omgcobra.story.styles.FontAwesome
 import org.omgcobra.story.useUI
 import react.*
-import react.dom.*
 import styled.*
 import kotlin.reflect.KProperty1
 
@@ -37,7 +36,7 @@ inline fun RBuilder.themedA(
     href: String? = null,
     target: String? = null,
     crossinline block: StyledDOMBuilder<A>.() -> Unit
-): ReactElement =
+) =
   UIContext.Consumer { uiHolder ->
     styledA(href, target) {
       block()
@@ -71,7 +70,7 @@ interface ThemedButtonProps : RProps {
   var buttonBuilder: StyledDOMBuilder<BUTTON>.() -> Unit
 }
 
-val ThemedButton: RClass<ThemedButtonProps> = rFunction(::ThemedButton.name) { props ->
+val ThemedButton: FunctionComponent<ThemedButtonProps> = functionComponent(::ThemedButton.name) { props ->
   val uiHolder = useUI()
 
   styledButton(formEncType = props.formEncType, formMethod = props.formMethod, type = props.type) {
@@ -92,8 +91,7 @@ fun RBuilder.themedButton(
     type: ButtonType? = null,
     variants: Collection<ButtonVariant>? = null,
     block: StyledDOMBuilder<BUTTON>.() -> Unit
-): ReactElement =
-  ThemedButton {
+) = child(ThemedButton) {
     attrs {
       this.formEncType = formEncType
       this.formMethod = formMethod
@@ -104,10 +102,10 @@ fun RBuilder.themedButton(
   }
 
 interface Variant {
-  val buildStyles: CSSBuilder.(Theme) -> Unit
+  val buildStyles: CssBuilder.(Theme) -> Unit
 }
 
-enum class ButtonVariant(override val buildStyles: CSSBuilder.(Theme) -> Unit) : Variant {
+enum class ButtonVariant(override val buildStyles: CssBuilder.(Theme) -> Unit) : Variant {
   Success({
     backgroundColor = it.success
     color = it.successContrast

@@ -91,16 +91,18 @@ var CommonAttributeGroupFacade.onMouseEnterFunction: (Event) -> Unit
     consumer.onTagEvent(this, "onmouseenter", newValue)
   }
 
-fun <P : RProps> forwardRef(displayName: String? = null, handler: RBuilder.(P, RRef) -> Unit): RClass<P> =
-  forwardRef(handler).also { it.displayName = displayName }
+fun <P : RProps> forwardRef(displayName: String? = null, handler: RBuilder.(P, Ref<*>) -> Unit): ComponentType<P> =
+  forwardRef(handler).also {
+    it.asDynamic()["displayName"] = displayName
+  }
 
-interface ErrorState : RState {
+interface ErrorState : State {
   var error: Throwable?
-  var info: RErrorInfo?
+  var info: ErrorInfo?
 }
 
 class ErrorBoundary(props: RProps) : RComponent<RProps, ErrorState>(props) {
-  override fun componentDidCatch(error: Throwable, info: RErrorInfo) {
+  override fun componentDidCatch(error: Throwable, info: ErrorInfo) {
     setState {
       this.error = error
       this.info = info
@@ -125,11 +127,11 @@ class ErrorBoundary(props: RProps) : RComponent<RProps, ErrorState>(props) {
 
 typealias Dispatcher<S> = (S.() -> Unit) -> Unit
 
-fun useUpdate(dependencies: RDependenciesList? = null, effect: () -> Unit) {
+fun useUpdate(vararg dependencies: dynamic, effect: () -> Unit) {
   val mounted = useRef(false)
 
-  useEffect(dependencies) {
-    if (!mounted.current) {
+  useEffect(*dependencies) {
+    if (mounted.current != true) {
       mounted.current = true
     } else {
       effect()
@@ -150,17 +152,20 @@ fun <T : CommonAttributeGroupFacade, S> RDOMBuilder<T>.updateClick(updateState: 
   }
 }
 
-fun useSize(rRef: RMutableRef<out Element?>, assumedSize: DOMRectReadOnly = DOMRectReadOnly(0.0, 0.0, 0.0, 0.0)): DOMRectReadOnly {
+fun useSize(rRef: MutableRefObject<out Element>, assumedSize: DOMRectReadOnly = DOMRectReadOnly(0.0, 0.0, 0.0, 0.0)): DOMRectReadOnly {
   val (size, setSize) = useState(assumedSize)
   val debounced: (DOMRectReadOnly) -> Unit = debounce { setSize(it as DOMRectReadOnly) }
   val observer = ResizeObserver { it.forEach { box -> debounced(box.contentRect) } }
 
-  useLayoutEffectWithCleanup(listOf(rRef.current)) {
+  useLayoutEffect(rRef.current) {
     rRef.current?.let { element ->
       setSize(element.getBoundingClientRect())
       observer.observe(element)
     }
-    return@useLayoutEffectWithCleanup { observer.disconnect() }
+
+    cleanup {
+      observer.disconnect()
+    }
   }
   return size
 }

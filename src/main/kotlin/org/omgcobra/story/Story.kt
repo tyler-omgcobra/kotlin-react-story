@@ -11,6 +11,7 @@ import org.omgcobra.story.styles.themes.*
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.events.Event
 import react.*
+import react.Context
 import react.dom.*
 import styled.*
 
@@ -42,19 +43,19 @@ val UIState.rightMargin: LinearDimension
   }
 
 interface StoryState {
-  var passage: RClass<*>
+  var passage: ComponentType<*>
   var last: StoryState?
 }
 
 fun <S : StoryState> S.toJSON(): String {
   val clone = clone(this).asDynamic()
-  clone.passage = passage.displayName
+  clone.passage = passage::class.simpleName
   clone.last = last?.toJSON()
   return JSON.stringify(clone)
 }
 fun String.hydrate(uiHolder: UIHolder): StoryState {
   val obj = JSON.parse<dynamic>(this)
-  obj.passage = uiHolder.componentMap[obj.passage]
+  obj.passage = uiHolder.componentMap[obj.passage as? String]
   obj.last = obj.last?.unsafeCast<String>()?.hydrate(uiHolder)
   return obj.unsafeCast<StoryState>()
 }
@@ -63,10 +64,10 @@ interface StoryProps : RProps {
   var leftBarConfig: SideBarConfig?
   var rightBarConfig: SideBarConfig?
   var initialStoryState: StoryState
-  var excludeFromHistory: Collection<RClass<*>>?
+  var excludeFromHistory: Collection<FunctionComponent<*>>?
   var title: String?
   var onRestart: (StoryState.() -> Unit)?
-  var components: Collection<RClass<*>>?
+  var components: Collection<FunctionComponent<*>>?
 }
 
 data class WindowSize(
@@ -85,7 +86,7 @@ fun debounce(ms: Int = 100, fn: (dynamic) -> Unit): (dynamic) -> Unit {
   }
 }
 
-val Story = rFunction<StoryProps>("Story") { props ->
+val Story = functionComponent<StoryProps>("Story") { props ->
   val initialState = props.initialStoryState.apply {
     last = null
   }
@@ -95,7 +96,7 @@ val Story = rFunction<StoryProps>("Story") { props ->
   val hasRight = props.rightBarConfig != null
   val excluded = props.excludeFromHistory ?: setOf()
   val (components) = (props.components ?: setOf()).useReducer()
-  val componentMap = components.map { it.displayName to it }.toMap()
+  val componentMap = components.associateBy { it.displayName }
   val initialUIState: UIState = jsObject {
     goingBack = false
     hasLeftBar = hasLeft
@@ -109,19 +110,20 @@ val Story = rFunction<StoryProps>("Story") { props ->
   }
   val (uiStatePair, setUIState) = initialUIState.usePrevReducer()
   val uiState = uiStatePair.first
-  val storyRef = useRef<HTMLDivElement?>(null)
+  val storyRef = useRef<HTMLDivElement>(null)
 
-  useEffect(listOf()) {
-    document.title = props.title ?: "Story"
-  }
-
-  useEffectWithCleanup(listOf()) {
+  useEffectOnce {
     val resize: (Event?) -> Unit = debounce { setUIState { windowSize = WindowSize(width = window.innerWidth, height = window.innerHeight) } }.unsafeCast<(Event?) -> Unit>()
     window.addEventListener("resize", resize)
-    return@useEffectWithCleanup { window.removeEventListener("resize", resize) }
+
+    document.title = props.title ?: "Story"
+
+    cleanup {
+      window.removeEventListener("resize", resize)
+    }
   }
 
-  useUpdate(listOf(state.passage)) {
+  useUpdate(state.passage) {
     storyRef.current?.scrollTo(0.0, 0.0)
 
     if (!uiState.wide) {
@@ -215,23 +217,23 @@ val Story = rFunction<StoryProps>("Story") { props ->
 val StoryContext = createContext<Modifier<StoryState>>()
 
 fun <S : Any> S.useReducer(): Modifier<S> {
-  val reducerFn: (S, S.() -> Unit) -> S = { s, a -> clone(s).apply(a) }
-  val (current, modify) = useReducer(reducerFn, initState = this)
+  val reducerFn: RReducer<S, S.() -> Unit> = { s, a -> clone(s).apply(a) }
+  val (current, modify) = useReducer(reducerFn, this)
   return Modifier(current, modify)
 }
 
-fun <S : Any> S.usePrevReducer(): Pair<Pair<S, S?>, (S.() -> Unit) -> Unit> {
-  val reducerFn: (Pair<S, S?>, S.() -> Unit) -> Pair<S, S?> = { pair, a ->
+fun <S : Any> S.usePrevReducer(): ReducerInstance<Pair<S, S?>, S.() -> Unit> {
+  val reducerFn: RReducer<Pair<S, S?>, S.() -> Unit> = { pair, a ->
     val first = pair.first
     clone(first).apply(a) to first
   }
-  return useReducer(reducerFn, initState = this to null)
+  return useReducer(reducerFn, this to null)
 }
 
 fun <S : StoryState> useStoryState(): Modifier<S> = useContext(StoryContext).unsafeCast<Modifier<S>>()
 fun useUI() = useContext(UIContext)
 
-val UIContext: RContext<UIHolder> = createContext()
+val UIContext: Context<UIHolder> = createContext()
 
 data class Modifier<T>(var state: T, var setState: Dispatcher<T>)
 
@@ -241,7 +243,7 @@ data class UIHolder(
     var back: () -> Unit,
     var forward: () -> Unit,
     var restart: () -> Unit,
-    var componentMap: Map<String?, RClass<*>>
+    var componentMap: Map<String?, FunctionComponent<*>>
 )
 
 inline fun renderToRoot(crossinline attrBuilder: StoryProps.() -> Unit) {

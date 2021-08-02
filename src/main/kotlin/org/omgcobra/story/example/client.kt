@@ -16,7 +16,7 @@ interface ExampleState : StoryState {
   var test: String
 }
 
-val LeftContent: RClass<RProps> = rFunction(::LeftContent.name) {
+val LeftContent: ComponentType<RProps> = functionComponent(::LeftContent.name) {
   val (state) = useStoryState<ExampleState>()
 
   p {
@@ -24,7 +24,7 @@ val LeftContent: RClass<RProps> = rFunction(::LeftContent.name) {
   }
 }
 
-val LeftButtons: RClass<RProps> = rFunction(::LeftButtons.name) {
+val LeftButtons: ComponentType<RProps> = functionComponent(::LeftButtons.name) {
   val uiHolder = useUI()
   val theme = uiHolder.uiState.theme
   val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { this.theme = it } }
@@ -50,7 +50,7 @@ val leftBar = SideBarConfig(
     showHistory = true
 )
 
-val RightContent: RClass<RProps> = rFunction(::RightContent.name) {
+val RightContent: ComponentType<RProps> = functionComponent(::RightContent.name) {
   val (state) = useStoryState<ExampleState>()
   p {
     +"Right bar"
@@ -62,7 +62,7 @@ val RightContent: RClass<RProps> = rFunction(::RightContent.name) {
 
 val rightBar = SideBarConfig(right = true, content = { RightContent {} })
 
-val Ex: RClass<RProps> = rFunction(::Ex.name) {
+val Ex: FunctionComponent<RProps> = functionComponent(::Ex.name) {
   val updateState = useStoryState<ExampleState>().setState
   val uiHolder = useUI()
   val setTheme: (Theme) -> Unit = { uiHolder.updateUIState { theme = it } }
@@ -137,7 +137,7 @@ val Ex: RClass<RProps> = rFunction(::Ex.name) {
   }
 }
 
-val ExTwo: RClass<RProps> = rFunction(::ExTwo.name) {
+val ExTwo: FunctionComponent<RProps> = functionComponent(::ExTwo.name) {
   val (state, updateState) = useStoryState<ExampleState>()
   p {
     +"You got to the second page!"
@@ -167,7 +167,7 @@ val ExTwo: RClass<RProps> = rFunction(::ExTwo.name) {
   BackButton {}
 }
 
-val ExCal: RClass<RProps> = rFunction(::ExCal.name) {
+val ExCal: FunctionComponent<RProps> = functionComponent(::ExCal.name) {
   val (chosen, setChosen) = useState(LocalDate(2020, 10, 10))
 
   val calConfig = CalendarConfig(

@@ -4,7 +4,7 @@ import kotlinx.css.*
 import kotlinx.html.DIV
 import org.omgcobra.story.forwardRef
 import react.*
-import react.dom.RDOMBuilder
+import react.dom.attrs
 import styled.css
 import styled.styledDiv
 
@@ -37,9 +37,9 @@ val VerticalLayout = forwardRef<LayoutProps>("VerticalLayout") { props, rRef ->
 fun RBuilder.layoutDiv(
     direction: FlexDirection,
     props: LayoutProps,
-    rRef: RRef,
-    sizingFn: CSSBuilder.() -> Unit,
-    spacingFn: CSSBuilder.(LinearDimension) -> Unit
+    rRef: Ref<*>,
+    sizingFn: CssBuilder.() -> Unit,
+    spacingFn: CssBuilder.(LinearDimension) -> Unit
 ) {
   LayoutContext.Consumer { layout ->
     styledDiv {

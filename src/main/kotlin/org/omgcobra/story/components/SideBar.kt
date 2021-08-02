@@ -47,7 +47,7 @@ interface SideBarProps : RProps {
   var config: SideBarConfig
 }
 
-val SideBar: RClass<SideBarProps> = rFunction(::SideBar.name) { props ->
+val SideBar: FunctionComponent<SideBarProps> = functionComponent(::SideBar.name) { props ->
   val (uiState, setUIState) = useUI()
   val theme = uiState.theme
   val config = props.config
@@ -56,7 +56,7 @@ val SideBar: RClass<SideBarProps> = rFunction(::SideBar.name) { props ->
   val open = if (config.right) uiState.rightBarOpen else uiState.leftBarOpen
   val setOpen: (Boolean) -> Unit = { setUIState { if (config.right) rightBarOpen = it else leftBarOpen = it } }
 
-  useEffect(listOf(pinned)) {
+  useEffect(pinned) {
     setOpen(pinned)
   }
 
@@ -91,7 +91,7 @@ private data class SideBarState(
 
 private val SideBarContext = createContext<SideBarState>()
 
-private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
+private val SideBarTray: ComponentType<RProps> = functionComponent(::SideBarTray.name) {
   val (config, open, setOpen, pinned, setPinned) = useContext(SideBarContext)
   val (_, _, back, forward) = useUI()
   val (storyState) = useStoryState<StoryState>()
@@ -161,7 +161,7 @@ private val SideBarTray: RClass<RProps> = rFunction(::SideBarTray.name) {
   }
 }
 
-private val SideBarBody: RClass<RProps> = rFunction(::SideBarBody.name) {
+private val SideBarBody: ComponentType<RProps> = functionComponent(::SideBarBody.name) {
   val (state, updateState) = useContext(StoryContext)
   val (config, open) = useContext(SideBarContext)
   val uiHolder = useUI()

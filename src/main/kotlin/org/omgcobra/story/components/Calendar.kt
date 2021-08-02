@@ -5,6 +5,7 @@ import kotlinx.css.properties.border
 import kotlinx.css.properties.borderLeft
 import kotlinx.datetime.*
 import org.omgcobra.story.*
+import org.omgcobra.story.Key
 import org.omgcobra.story.styles.ComponentStyles
 import org.omgcobra.story.styles.FontAwesome
 import org.w3c.dom.DOMRectReadOnly
@@ -32,7 +33,7 @@ interface CalendarProps : RProps {
   var config: CalendarConfig
 }
 
-private val CalendarSkinny: RClass<RProps> = rFunction(::CalendarSkinny.name) { props ->
+private val CalendarSkinny: FunctionComponent<RProps> = functionComponent(::CalendarSkinny.name) { props ->
   val config = useContext(CalendarConfigContext)
   val theme = useUI().uiState.theme
   VerticalLayout {
@@ -64,8 +65,8 @@ private val CalendarSkinny: RClass<RProps> = rFunction(::CalendarSkinny.name) { 
 
 private const val widthStop = 600
 
-val Calendar: RClass<CalendarProps> = rFunction(::Calendar.name) { props ->
-  val calRef: RMutableRef<Element?> = useRef(null)
+val Calendar: FunctionComponent<CalendarProps> = functionComponent(::Calendar.name) { props ->
+  val calRef: MutableRefObject<Element> = useRef(null)
   val width = useSize(calRef, DOMRectReadOnly(0.0, 0.0, widthStop.toDouble(), 0.0)).width
   val calendar = if (width > widthStop) CalendarTable else CalendarSkinny
 
@@ -82,7 +83,7 @@ val Calendar: RClass<CalendarProps> = rFunction(::Calendar.name) { props ->
 private val CalendarConfigContext = createContext<CalendarConfig>()
 val CalendarDateContext = createContext<LocalDate>()
 
-private val CalendarTable: RClass<RProps> = rFunction(::CalendarTable.name) { props ->
+private val CalendarTable: FunctionComponent<RProps> = functionComponent(::CalendarTable.name) { props ->
   val config = useContext(CalendarConfigContext)
   val theme = useUI().uiState.theme
   val weeks = 0 until config.weeks
@@ -106,7 +107,7 @@ private val CalendarTable: RClass<RProps> = rFunction(::CalendarTable.name) { pr
             borderLeft(1.px, BorderStyle.solid, theme.border)
           }
         }
-        +it.name.toLowerCase().capitalize().substring(0..2)
+        +it.name.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }.substring(0..2)
       }
     }
   }
@@ -144,7 +145,7 @@ private interface TableCellProps : RProps {
   var css: RuleSet?
 }
 
-private val CalendarDay: RClass<TableCellProps> = forwardRef(::CalendarDay.name) { props, rRef ->
+private val CalendarDay: ComponentType<TableCellProps> = forwardRef(::CalendarDay.name) { props, rRef ->
   val config = useContext(CalendarConfigContext)
   val date = useContext(CalendarDateContext)
   val theme = useUI().uiState.theme
